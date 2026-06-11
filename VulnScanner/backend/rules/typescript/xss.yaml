@@ -1,0 +1,73 @@
+language: typescript
+category: XSS
+rules:
+  - id: TS-XSS-001
+    name: "dangerouslySetInnerHTML usage"
+    description: "React dangerouslySetInnerHTML renders raw HTML, enabling XSS if user input is not sanitized."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1189"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Use a sanitization library like DOMPurify before passing content to dangerouslySetInnerHTML."
+    references:
+      - "https://owasp.org/www-community/attacks/xss/"
+    patterns:
+      - type: regex
+        pattern: "dangerouslySetInnerHTML\\s*=\\s*\\{\\s*\\{\\s*__html"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "DOMPurify\\.sanitize"
+      - "sanitize\\("
+
+  - id: TS-XSS-002
+    name: "innerHTML assignment"
+    description: "Direct assignment to innerHTML with user input enables XSS attacks."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1189"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use textContent instead of innerHTML, or sanitize with DOMPurify."
+    references:
+      - "https://owasp.org/www-community/attacks/xss/"
+    patterns:
+      - type: regex
+        pattern: "\\.innerHTML\\s*="
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\.outerHTML\\s*="
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "\\.innerHTML\\s*=\\s*[\"']\\s*[\"']"
+
+  - id: TS-XSS-003
+    name: "document.write usage"
+    description: "document.write() can inject arbitrary HTML into the page, enabling XSS."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1189"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use DOM manipulation methods (createElement, appendChild) instead of document.write."
+    references:
+      - "https://owasp.org/www-community/attacks/xss/"
+    patterns:
+      - type: regex
+        pattern: "document\\.write(ln)?\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

@@ -1,0 +1,79 @@
+language: swift
+category: INSECURE_COMMUNICATION
+rules:
+  - id: SW-COMM-001
+    name: "App Transport Security disabled"
+    description: "NSAllowsArbitraryLoads disables App Transport Security, allowing insecure HTTP connections."
+    severity: HIGH
+    cwe: "CWE-319"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf:
+      - "PR.DS-02"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Enable App Transport Security. Configure specific exceptions only for required domains."
+    references:
+      - "https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity"
+    patterns:
+      - type: regex
+        pattern: "NSAllowsArbitraryLoads.*true"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "allowsArbitraryLoads\\s*=\\s*true"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: SW-COMM-002
+    name: "Certificate pinning bypass"
+    description: "URLSession delegate disabling server trust evaluation, bypassing certificate validation."
+    severity: CRITICAL
+    cwe: "CWE-295"
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1557"
+    nist_csf:
+      - "PR.DS-02"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Implement proper certificate pinning. Never blindly accept all server certificates."
+    references:
+      - "https://cwe.mitre.org/data/definitions/295.html"
+    patterns:
+      - type: regex
+        pattern: "urlSession.*didReceive.*challenge.*completionHandler.*\\.useCredential"
+        flags: [MULTILINE, DOTALL]
+      - type: regex
+        pattern: "ServerTrustPolicy\\.disableEvaluation"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "DisabledTrustEvaluator"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: SW-COMM-003
+    name: "HTTP URL usage"
+    description: "Hardcoded HTTP (non-HTTPS) URL for API communication, transmitting data in plaintext."
+    severity: MEDIUM
+    cwe: "CWE-319"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf:
+      - "PR.DS-02"
+    confidence: MEDIUM
+    false_positive_risk: HIGH
+    remediation: "Use HTTPS for all network communications."
+    references:
+      - "https://cwe.mitre.org/data/definitions/319.html"
+    patterns:
+      - type: regex
+        pattern: "URL\\s*\\(\\s*string:\\s*\"http://(?!localhost|127\\.0\\.0\\.1)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "localhost"
+      - "127\\.0\\.0\\.1"
+      - "^\\s*//"

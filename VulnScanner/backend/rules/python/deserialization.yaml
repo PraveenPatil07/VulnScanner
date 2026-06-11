@@ -1,0 +1,97 @@
+language: python
+category: INSECURE_DESERIALIZATION
+rules:
+  - id: PY-DESER-001
+    name: "pickle.loads() with untrusted data"
+    description: "pickle.loads() deserializes Python objects from bytes. Untrusted data can trigger arbitrary code execution during deserialization."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Never unpickle data from untrusted sources. Use JSON or other safe serialization formats. If pickle is required, use hmac to verify data integrity before deserializing."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+      - "https://docs.python.org/3/library/pickle.html#restricting-globals"
+    patterns:
+      - type: regex
+        pattern: 'pickle\.(loads|load)\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '_?cPickle\.(loads|load)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+      - 'RestrictedUnpickler'
+
+  - id: PY-DESER-002
+    name: "yaml.load() without SafeLoader"
+    description: "yaml.load() without specifying Loader=yaml.SafeLoader can execute arbitrary Python code embedded in YAML."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Always use yaml.safe_load() or yaml.load(data, Loader=yaml.SafeLoader)."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'yaml\.load\s*\([^)]*\)\s*(?!.*Loader\s*=\s*yaml\.SafeLoader)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'yaml\.load\s*\(\s*[^,\)]+\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'yaml\.safe_load'
+      - 'Loader\s*=\s*(yaml\.)?SafeLoader'
+      - 'Loader\s*=\s*(yaml\.)?BaseLoader'
+      - '^\s*#'
+
+  - id: PY-DESER-003
+    name: "marshal.loads() with untrusted data"
+    description: "marshal.loads() deserializes Python objects. Malformed marshal data can crash the interpreter or execute code."
+    severity: HIGH
+    cwe: "CWE-502"
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Do not use marshal to deserialize untrusted data. Use JSON or another safe format."
+    references:
+      - "https://docs.python.org/3/library/marshal.html"
+    patterns:
+      - type: regex
+        pattern: 'marshal\.(loads|load)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+
+  - id: PY-DESER-004
+    name: "shelve.open() with user-controlled path"
+    description: "shelve.open() uses pickle internally. Opening a shelve file from a user-controlled path can lead to code execution."
+    severity: HIGH
+    cwe: "CWE-502"
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Do not open shelve files from untrusted paths. Use a database or JSON for persistent storage."
+    references:
+      - "https://docs.python.org/3/library/shelve.html"
+    patterns:
+      - type: regex
+        pattern: 'shelve\.open\s*\(\s*(request\.|req\.|user_|input|param|args|data|filename|filepath|path)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'

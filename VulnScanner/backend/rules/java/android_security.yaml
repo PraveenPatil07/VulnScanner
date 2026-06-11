@@ -1,0 +1,99 @@
+language: java
+category: INSECURE_CONFIGURATION
+rules:
+  - id: JAVA-ANDROID-001
+    name: "WebView JavaScript enabled"
+    description: "WebView with JavaScript enabled can be exploited for XSS if loading untrusted content."
+    severity: MEDIUM
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059.007"
+    nist_csf: ["PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Only enable JavaScript when necessary. Validate URLs loaded in WebView and use WebViewClient to restrict navigation."
+    references:
+      - "https://developer.android.com/develop/ui/views/layout/webapps/webview#HandlingNavigation"
+    patterns:
+      - type: regex
+        pattern: 'setJavaScriptEnabled\s*\(\s*true\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+
+  - id: JAVA-ANDROID-002
+    name: "WebView loadUrl with user input"
+    description: "WebView loading a URL from user-controlled input could allow phishing or JavaScript injection."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:H/A:N"
+    mitre_attack: "T1059.007"
+    nist_csf: ["PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate and whitelist URLs before loading in WebView. Never load user-controlled URLs directly."
+    references:
+      - "https://developer.android.com/develop/ui/views/layout/webapps/webview"
+    patterns:
+      - type: regex
+        pattern: 'loadUrl\s*\(\s*[^)"]*(?:intent|getExtra|getQuery|url|uri|input)'
+        flags: [MULTILINE, IGNORECASE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+
+  - id: JAVA-ANDROID-003
+    name: "Insecure SharedPreferences for sensitive data"
+    description: "Storing sensitive data (passwords, tokens) in SharedPreferences without encryption."
+    severity: MEDIUM
+    cwe: "CWE-312"
+    cvss_score: 5.5
+    cvss_vector: "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1552.001"
+    nist_csf: ["PR.DS-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use EncryptedSharedPreferences from AndroidX Security library for sensitive data."
+    references:
+      - "https://developer.android.com/topic/security/data"
+    patterns:
+      - type: regex
+        pattern: '(?i)(?:putString|edit\(\))\s*[^;]*(?:password|token|secret|api.?key|session|credential)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?i)getSharedPreferences\s*\([^)]*(?:password|token|secret|credential|auth)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+      - 'EncryptedSharedPreferences'
+
+  - id: JAVA-ANDROID-006
+    name: "Hardcoded API URL with HTTP"
+    description: "Using HTTP instead of HTTPS for API communication exposes data to man-in-the-middle attacks."
+    severity: MEDIUM
+    cwe: "CWE-319"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use HTTPS for all API endpoints. Configure network security to block cleartext traffic."
+    references:
+      - "https://developer.android.com/privacy-and-security/security-config"
+    patterns:
+      - type: regex
+        pattern: '(?:BASE_URL|API_URL|SERVER_URL|ENDPOINT)\s*=\s*"http://'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: '(?:Retrofit|OkHttp|URL)\s*[\.(]\s*"http://'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'localhost'
+      - '127\.0\.0\.1'
+      - '10\.0\.2\.2'

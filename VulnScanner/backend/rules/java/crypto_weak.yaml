@@ -1,0 +1,66 @@
+language: java
+category: CRYPTO_WEAK
+rules:
+  - id: JAVA-CRYPTO-001
+    name: "MD5/SHA1 usage in Java"
+    description: "Weak hash algorithms MD5 or SHA-1 used for security purposes."
+    severity: MEDIUM
+    cwe: "CWE-327"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Use SHA-256 or SHA-3: MessageDigest.getInstance(\"SHA-256\")"
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'MessageDigest\.getInstance\s*\(\s*"(?:MD5|SHA-1|SHA1)"\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '(?i)(checksum|fingerprint|etag|legacy)'
+      - '^\s*//'
+
+  - id: JAVA-CRYPTO-002
+    name: "DES/DESede/RC4 cipher in Java"
+    description: "Weak cipher algorithm used for encryption."
+    severity: HIGH
+    cwe: "CWE-327"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use AES/GCM/NoPadding with 256-bit keys."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'Cipher\.getInstance\s*\(\s*"(?:DES|DESede|RC4|RC2|Blowfish)[\w/]*"'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JAVA-CRYPTO-003
+    name: "ECB mode cipher in Java"
+    description: "ECB (Electronic Codebook) mode does not provide semantic security. Identical plaintext blocks produce identical ciphertext."
+    severity: MEDIUM
+    cwe: "CWE-327"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use GCM mode: Cipher.getInstance(\"AES/GCM/NoPadding\")"
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'Cipher\.getInstance\s*\(\s*"[^"]*ECB[^"]*"'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

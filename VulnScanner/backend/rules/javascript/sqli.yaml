@@ -1,0 +1,102 @@
+language: javascript
+category: SQL_INJECTION
+rules:
+  - id: JS-SQLI-001
+    name: "Template literal in SQL query"
+    description: "SQL query constructed using template literals with user input, enabling SQL injection attacks."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries: connection.query('SELECT * FROM users WHERE id = ?', [userId])"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+      - "https://cwe.mitre.org/data/definitions/89.html"
+    patterns:
+      - type: regex
+        pattern: '(?i)(query|execute)\s*\(\s*`[^`]*\$\{[^}]*\}[^`]*`'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?i)(query|execute)\s*\(\s*`[^`]*(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE)[^`]*\$\{'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'prepared'
+
+  - id: JS-SQLI-002
+    name: "String concatenation in SQL query"
+    description: "SQL query built by concatenating strings with user input, vulnerable to SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries with placeholder values."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?i)(query|execute)\s*\(\s*["\x27][^"\x27]*(SELECT|INSERT|UPDATE|DELETE)[^"\x27]*["\x27]\s*\+\s*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?i)(connection|conn|db|pool)\.(query|execute)\s*\(\s*["\x27].*["\x27]\s*\+\s*(req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-SQLI-003
+    name: "Sequelize raw query with user input"
+    description: "Sequelize .query() method used with string concatenation instead of bind parameters."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use Sequelize's built-in parameterization: sequelize.query('SELECT * FROM users WHERE id = :id', { replacements: { id: userId } })"
+    references:
+      - "https://sequelize.org/docs/v6/core-concepts/raw-queries/"
+    patterns:
+      - type: regex
+        pattern: 'sequelize\.query\s*\(\s*[`"\x27].*\+\s*(req\.|request\.|params\.|body\.)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'sequelize\.query\s*\(\s*`[^`]*\$\{'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'replacements'
+      - 'bind'
+      - '^\s*//'
+
+  - id: JS-SQLI-004
+    name: "Knex raw query with interpolation"
+    description: "Knex.raw() used with string interpolation instead of parameter bindings."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use Knex parameter binding: knex.raw('SELECT * FROM users WHERE id = ?', [userId])"
+    references:
+      - "https://knexjs.org/guide/raw.html"
+    patterns:
+      - type: regex
+        pattern: 'knex\.raw\s*\(\s*`[^`]*\$\{'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'knex\.raw\s*\(\s*["\x27].*["\x27]\s*\+\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

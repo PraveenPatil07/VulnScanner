@@ -1,0 +1,75 @@
+language: java
+category: COMMAND_INJECTION
+rules:
+  - id: JAVA-CMDI-001
+    name: "Runtime.exec with user input"
+    description: "Runtime.getRuntime().exec() called with user-controlled command string."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use ProcessBuilder with explicit argument list. Never pass user input directly to shell commands. Validate input against allowlists."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'Runtime\.getRuntime\s*\(\s*\)\s*\.exec\s*\(\s*[^")]*\+\s*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Runtime\.getRuntime\s*\(\s*\)\s*\.exec\s*\(\s*(?:request|req|param|input|user|cmd|command)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+
+  - id: JAVA-CMDI-002
+    name: "ProcessBuilder with user input"
+    description: "ProcessBuilder constructed with user-controlled command arguments."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Validate command arguments against strict allowlists. Never allow user input to control the command name."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'new\s+ProcessBuilder\s*\(\s*(?:request|req|param|input|user|cmd|command)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'ProcessBuilder\s*\([^)]*\+\s*(?:request|req|param|input|user)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JAVA-CMDI-003
+    name: "ScriptEngine eval with user input"
+    description: "Java ScriptEngine.eval() executes scripts in embedded engines. User input enables arbitrary code execution."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Do not pass user input to ScriptEngine.eval(). Use a sandboxed execution environment if scripting is required."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: '(?:ScriptEngine|engine)\s*\.\s*eval\s*\(\s*(?:request|req|param|input|user)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.eval\s*\(\s*[^")]*\+\s*(?:request|req|param|input|user)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

@@ -1,0 +1,67 @@
+# Master prompt (sensitive)
+SCANNER_BUILD_PROMPT.md
+
+# Build plan (dev reference only)
+vuln_scanner_build_plan.md
+
+# Files with example secrets (blocked by GitHub Push Protection)
+vuln-scanner/backend/rules/javascript/secrets.yaml
+vuln-scanner/backend/rules/python/secrets.yaml
+vuln-scanner/backend/rules/shared/secrets.yaml
+vuln-scanner/backend/tests/conftest.py
+vuln-scanner/backend/tests/fixtures/hardcoded_secret.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+*.env.local
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite3
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Build output
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Uploads & temp
+vuln-scanner/backend/uploads/
+vuln-scanner/backend/extracted/
+
+# Redis dump
+dump.rdb
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml

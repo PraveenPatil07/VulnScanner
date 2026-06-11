@@ -1,0 +1,31 @@
+language: typescript
+category: PATH_TRAVERSAL
+rules:
+  - id: TS-PATH-001
+    name: "Path traversal in file operations"
+    description: "File path constructed with user input without sanitization, allowing directory traversal."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Use path.resolve() and verify the resolved path is within the expected base directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: "(?:readFile|writeFile|readFileSync|writeFileSync|createReadStream|createWriteStream)\\s*\\(\\s*(?:req\\.|params\\.|query\\.)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "path\\.(?:join|resolve)\\s*\\([^)]*(?:req\\.|params\\.|query\\.)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:readFile|writeFile)\\s*\\(\\s*`[^`]*\\$\\{[^}]*(?:req|params|query)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "path\\.normalize"

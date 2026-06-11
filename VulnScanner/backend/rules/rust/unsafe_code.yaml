@@ -1,0 +1,48 @@
+language: rust
+category: UNSAFE_CODE
+rules:
+  - id: RS-UNSAFE-001
+    name: "Public unsafe function"
+    description: "Public unsafe function exposes unsafe API to callers who must uphold safety invariants."
+    severity: MEDIUM
+    cwe: "CWE-119"
+    cvss_score: 6.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Minimize unsafe fn exposure. Provide safe wrappers where possible. Document safety invariants."
+    references:
+      - "https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html"
+    patterns:
+      - type: regex
+        pattern: "pub\\s+unsafe\\s+fn\\b"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "// SAFETY:"
+
+  - id: RS-UNSAFE-002
+    name: "std::mem::transmute usage"
+    description: "std::mem::transmute reinterprets bits as a different type, bypassing type safety."
+    severity: HIGH
+    cwe: "CWE-704"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use safe conversion methods (From/Into, as, TryFrom/TryInto). Use transmute only with documented safety invariants."
+    references:
+      - "https://doc.rust-lang.org/std/mem/fn.transmute.html"
+    patterns:
+      - type: regex
+        pattern: "mem::transmute"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "// SAFETY:"

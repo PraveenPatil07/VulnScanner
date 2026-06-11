@@ -1,0 +1,71 @@
+language: go
+category: SQL_INJECTION
+rules:
+  - id: GO-SQLI-001
+    name: "fmt.Sprintf in SQL query"
+    description: "SQL query built with fmt.Sprintf, enabling SQL injection through string interpolation."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries: db.Query(\"SELECT * FROM users WHERE id = $1\", userID)"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?:Query|QueryRow|Exec)\s*\(\s*fmt\.Sprintf\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'db\.\w+\s*\(\s*fmt\.Sprintf\s*\(\s*"[^"]*(?:SELECT|INSERT|UPDATE|DELETE)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: GO-SQLI-002
+    name: "String concatenation in SQL query"
+    description: "SQL query built with string concatenation (+) operator."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries with $1, $2 placeholders for PostgreSQL or ? for MySQL."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?:Query|QueryRow|Exec)\s*\(\s*"[^"]*(?:SELECT|INSERT|UPDATE|DELETE)[^"]*"\s*\+'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: GO-SQLI-003
+    name: "GORM Raw with string interpolation"
+    description: "GORM Raw() method with string concatenation or Sprintf, bypassing GORM's query builder."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use GORM's parameterized Raw: db.Raw(\"SELECT * FROM users WHERE id = ?\", userID)"
+    references:
+      - "https://gorm.io/docs/sql_builder.html"
+    patterns:
+      - type: regex
+        pattern: '\.Raw\s*\(\s*fmt\.Sprintf\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.Raw\s*\(\s*"[^"]*"\s*\+'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

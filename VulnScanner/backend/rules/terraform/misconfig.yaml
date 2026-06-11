@@ -1,0 +1,167 @@
+language: terraform
+category: MISCONFIG
+
+rules:
+  - id: TF-MISCONF-001
+    name: S3 Bucket Without Encryption
+    description: "S3 bucket created without server-side encryption enabled"
+    severity: HIGH
+    cwe: CWE-311
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1530"
+    nist_csf: ["PR.DS-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A02:2021"
+    remediation: "Enable server_side_encryption_configuration on all S3 buckets"
+    references:
+      - "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket"
+    patterns:
+      - type: regex
+        pattern: 'resource\s+"aws_s3_bucket"\s+"[^"]*"\s*\{'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "server_side_encryption_configuration"
+
+  - id: TF-MISCONF-002
+    name: S3 Bucket Public Access
+    description: "S3 bucket allows public access via ACL"
+    severity: CRITICAL
+    cwe: CWE-284
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1530"
+    nist_csf: ["PR.AC-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A01:2021"
+    remediation: "Set acl to 'private' and use bucket policies for controlled access"
+    references:
+      - "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+    patterns:
+      - type: regex
+        pattern: 'acl\s*=\s*"(public-read|public-read-write|authenticated-read)"'
+    false_positive_filters: []
+
+  - id: TF-MISCONF-003
+    name: Security Group Allows All Inbound Traffic
+    description: "Security group rule allows ingress from 0.0.0.0/0 on all ports"
+    severity: CRITICAL
+    cwe: CWE-284
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.AC-5"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A01:2021"
+    remediation: "Restrict CIDR blocks to specific IPs or ranges. Never use 0.0.0.0/0 for non-public services."
+    references:
+      - "https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html"
+    patterns:
+      - type: regex
+        pattern: 'cidr_blocks\s*=\s*\[\s*"0\.0\.0\.0/0"\s*\]'
+    false_positive_filters: []
+
+  - id: TF-MISCONF-004
+    name: RDS Instance Without Encryption
+    description: "RDS database instance created without storage encryption"
+    severity: HIGH
+    cwe: CWE-311
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1530"
+    nist_csf: ["PR.DS-1"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    owasp_top10: "A02:2021"
+    remediation: "Set storage_encrypted = true on all RDS instances"
+    references:
+      - "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance"
+    patterns:
+      - type: regex
+        pattern: 'storage_encrypted\s*=\s*false'
+    false_positive_filters: []
+
+  - id: TF-MISCONF-005
+    name: CloudTrail Logging Disabled
+    description: "CloudTrail multi-region logging not enabled"
+    severity: HIGH
+    cwe: CWE-778
+    cvss_score: 6.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+    mitre_attack: "T1562.008"
+    nist_csf: ["DE.AE-3"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    owasp_top10: "A09:2021"
+    remediation: "Set is_multi_region_trail = true and enable_logging = true"
+    references:
+      - "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail"
+    patterns:
+      - type: regex
+        pattern: 'enable_logging\s*=\s*false'
+    false_positive_filters: []
+
+  - id: TF-MISCONF-006
+    name: Hardcoded AWS Credentials in Terraform
+    description: "AWS access key or secret key hardcoded in Terraform configuration"
+    severity: CRITICAL
+    cwe: CWE-798
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1552.001"
+    nist_csf: ["PR.AC-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A07:2021"
+    remediation: "Use AWS IAM roles, environment variables, or AWS Secrets Manager instead"
+    references:
+      - "https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html"
+    patterns:
+      - type: regex
+        pattern: '(access_key|secret_key)\s*=\s*"[A-Za-z0-9/+=]{20,}"'
+    false_positive_filters:
+      - "var\\."
+      - "data\\."
+
+  - id: TF-MISCONF-007
+    name: EBS Volume Not Encrypted
+    description: "EBS volume created without encryption"
+    severity: MEDIUM
+    cwe: CWE-311
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1530"
+    nist_csf: ["PR.DS-1"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    owasp_top10: "A02:2021"
+    remediation: "Set encrypted = true on all aws_ebs_volume resources"
+    references:
+      - "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume"
+    patterns:
+      - type: regex
+        pattern: 'encrypted\s*=\s*false'
+    false_positive_filters: []
+
+  - id: TF-MISCONF-008
+    name: IAM Policy with Wildcard Actions
+    description: "IAM policy grants wildcard (*) actions which is overly permissive"
+    severity: HIGH
+    cwe: CWE-269
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1078"
+    nist_csf: ["PR.AC-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A01:2021"
+    remediation: "Follow least privilege principle. Specify exact actions needed instead of *"
+    references:
+      - "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+    patterns:
+      - type: regex
+        pattern: '"Action"\s*:\s*(\[?\s*"\*"\s*\]?|"\*")'
+    false_positive_filters: []

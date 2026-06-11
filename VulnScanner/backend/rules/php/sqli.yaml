@@ -1,0 +1,96 @@
+language: php
+category: SQL_INJECTION
+rules:
+  - id: PHP-SQLI-001
+    name: "mysql_query with user input"
+    description: "Deprecated mysql_query function with concatenated user input from superglobals."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use PDO with prepared statements: $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?'); $stmt->execute([$id]);"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: 'mysql(?:i)?_query\s*\(\s*(?:\$\w+\s*,\s*)?["\x27][^"\x27]*["\x27]\s*\.\s*\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'mysql(?:i)?_query\s*\(\s*(?:\$\w+\s*,\s*)?["\x27].*\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'mysql_real_escape_string'
+      - '^\s*//'
+
+  - id: PHP-SQLI-002
+    name: "mysqli_query with concatenation"
+    description: "mysqli_query with string concatenation of user input."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use mysqli prepared statements: $stmt = $conn->prepare('SELECT * FROM users WHERE id = ?'); $stmt->bind_param('i', $id);"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: 'mysqli_query\s*\(\s*\$\w+\s*,\s*["\x27][^"\x27]*["\x27]\s*\.\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'mysqli_real_escape_string'
+      - '^\s*//'
+
+  - id: PHP-SQLI-003
+    name: "PDO query with concatenation"
+    description: "PDO query() method used with string concatenation instead of prepare()/execute()."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use $pdo->prepare() with placeholders and $stmt->execute() with bound parameters."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '\$\w+->query\s*\(\s*["\x27][^"\x27]*["\x27]\s*\.\s*\$'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\$\w+->query\s*\(\s*"[^"]*\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '->prepare\s*\('
+      - '^\s*//'
+
+  - id: PHP-SQLI-004
+    name: "Superglobal directly in SQL query"
+    description: "PHP superglobal ($_GET, $_POST, $_REQUEST, $_COOKIE) used directly in SQL query string."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Always use prepared statements. Never embed superglobals in query strings."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?i)(?:SELECT|INSERT|UPDATE|DELETE|WHERE)\s+.*\$_(GET|POST|REQUEST|COOKIE)\s*\['
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'prepare'

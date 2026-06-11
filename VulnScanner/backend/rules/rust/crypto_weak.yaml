@@ -1,0 +1,58 @@
+language: rust
+category: INSECURE_CRYPTO
+rules:
+  - id: RS-CRYPTO-001
+    name: "Weak hash algorithm"
+    description: "Use of MD5 or SHA1 for security-sensitive operations."
+    severity: HIGH
+    cwe: "CWE-327"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1600"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use sha2::Sha256 or sha3 crate. Use argon2/bcrypt for password hashing."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: "(?:md5|Md5)::(?:new|digest|compute)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:sha1|Sha1)::(?:new|digest|compute)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "use\\s+md5"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "checksum|fingerprint|etag|cache"
+      - "^\\s*//"
+
+  - id: RS-CRYPTO-002
+    name: "Insecure random generation"
+    description: "Using non-cryptographic RNG (thread_rng, SmallRng) for security-sensitive values."
+    severity: MEDIUM
+    cwe: "CWE-330"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1600"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Use rand::rngs::OsRng or the ring crate for cryptographic randomness."
+    references:
+      - "https://cwe.mitre.org/data/definitions/330.html"
+    patterns:
+      - type: regex
+        pattern: "SmallRng::from_entropy"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "thread_rng\\(\\)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "OsRng"
+      - "test|mock"
+      - "^\\s*//"

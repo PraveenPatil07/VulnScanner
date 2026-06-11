@@ -1,0 +1,68 @@
+language: go
+category: COMMAND_INJECTION
+rules:
+  - id: GO-CMDI-001
+    name: "exec.Command with shell and user input"
+    description: "exec.Command with bash/sh -c and user-controlled argument enables command injection."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Pass arguments as separate elements to exec.Command without shell interpretation: exec.Command(\"binary\", arg1, arg2)"
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'exec\.Command\s*\(\s*"(?:bash|sh|cmd)"\s*,\s*"-c"\s*,\s*(?!")[^)]*\)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'exec\.Command\s*\(\s*"(?:bash|sh)"\s*,\s*"-c"\s*,\s*fmt\.Sprintf'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: GO-CMDI-002
+    name: "exec.Command with user-controlled binary"
+    description: "exec.Command with user-controlled command name allows arbitrary binary execution."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate the command name against a strict allowlist of permitted binaries."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'exec\.Command\s*\(\s*(?:userInput|input|cmd|command|param|req\.|r\.)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: GO-CMDI-003
+    name: "exec.CommandContext with shell"
+    description: "exec.CommandContext with shell invocation and user input."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Avoid shell invocation. Use direct command execution with argument arrays."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'exec\.CommandContext\s*\([^,]+,\s*"(?:bash|sh)"\s*,\s*"-c"'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

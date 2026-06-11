@@ -1,0 +1,89 @@
+language: csharp
+category: XXE
+rules:
+  - id: "CS-XXE-001"
+    name: "XmlDocument without secure settings"
+    description: "Detects XmlDocument usage without explicitly setting XmlResolver to null. In .NET Framework < 4.5.2, XmlDocument resolves external entities by default, enabling XXE attacks that can read local files or perform SSRF."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.DS-5", "DE.CM-4"]
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Set XmlResolver = null on XmlDocument instances before loading any XML. In .NET 4.5.2+, the default is secure, but explicitly setting it ensures safety across framework versions."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html"
+      - "https://learn.microsoft.com/en-us/dotnet/api/system.xml.xmldocument"
+    patterns:
+      - type: regex
+        pattern: 'new\s+XmlDocument\s*\(\s*\)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'XmlDocument\s+\w+\s*=\s*new\s+XmlDocument\s*\(\s*\)\s*;(?:(?!XmlResolver\s*=\s*null).)*?\.Load'
+        flags: [MULTILINE, DOTALL]
+      - type: regex
+        pattern: 'XmlResolver\s*=\s*new\s+XmlUrlResolver\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'XmlResolver\s*=\s*null'
+      - '#if.*NET[56789]'
+      - '//\s*nosec'
+
+  - id: "CS-XXE-002"
+    name: "XmlTextReader without DtdProcessing.Prohibit"
+    description: "Detects XmlTextReader instantiation without setting DtdProcessing to Prohibit. XmlTextReader processes DTDs by default in older .NET versions, enabling XXE attacks."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.DS-5", "DE.CM-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Set DtdProcessing = DtdProcessing.Prohibit on XmlTextReader, or preferably use XmlReader.Create() with secure XmlReaderSettings."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html"
+      - "https://learn.microsoft.com/en-us/dotnet/api/system.xml.xmltextreader"
+    patterns:
+      - type: regex
+        pattern: 'new\s+XmlTextReader\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'XmlTextReader\s+\w+\s*=\s*new\s+XmlTextReader\s*\([^)]+\)\s*;(?:(?!DtdProcessing\s*=\s*DtdProcessing\.Prohibit).)*?\.Read'
+        flags: [MULTILINE, DOTALL]
+    false_positive_filters:
+      - 'DtdProcessing\s*=\s*DtdProcessing\.Prohibit'
+      - 'DtdProcessing\.Ignore'
+      - '//\s*nosec'
+
+  - id: "CS-XXE-003"
+    name: "XmlReaderSettings with DtdProcessing enabled"
+    description: "Detects XmlReaderSettings configured with DtdProcessing.Parse, which enables DTD processing and may allow XXE attacks if the XmlResolver is not also set to null."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.DS-5", "DE.CM-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use DtdProcessing.Prohibit or DtdProcessing.Ignore. If DTD processing is required, ensure XmlResolver is set to null to prevent external entity resolution."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html"
+      - "https://learn.microsoft.com/en-us/dotnet/api/system.xml.xmlreadersettings"
+    patterns:
+      - type: regex
+        pattern: 'DtdProcessing\s*=\s*DtdProcessing\.Parse'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'ProhibitDtd\s*=\s*false'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'XmlReaderSettings[^}]*DtdProcessing\.Parse[^}]*XmlResolver\s*=\s*new\s+XmlUrlResolver'
+        flags: [MULTILINE, DOTALL]
+    false_positive_filters:
+      - 'XmlResolver\s*=\s*null'
+      - 'MaxCharactersFromEntities\s*=\s*[1-9]'
+      - '//\s*nosec'

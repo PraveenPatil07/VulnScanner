@@ -1,0 +1,170 @@
+language: universal
+category: MISCONFIG
+rules:
+  - id: "UNI-MISCONF-001"
+    name: "Docker container running as root"
+    description: "Detects Dockerfiles that run containers as root (USER root or absence of USER directive after root operations). Containers running as root allow privilege escalation and host escape attacks."
+    severity: HIGH
+    cwe: "CWE-250"
+    cvss_score: 7.8
+    cvss_vector: "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1611"
+    nist_csf: ["PR.AC-4", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Add a non-root USER directive at the end of the Dockerfile. Create a dedicated user: RUN adduser --disabled-password --no-create-home appuser && USER appuser."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html"
+      - "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/"
+    patterns:
+      - type: regex
+        pattern: '^\s*USER\s+root\s*$'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '^\s*FROM\s+[^\n]+(?:(?!USER\s+(?!root))[\s\S])*$'
+        flags: [MULTILINE, DOTALL]
+      - type: regex
+        pattern: '^\s*RUN\s+.*chmod\s+[0-7]*[4-7][0-7]{2}\s+/(?:usr|bin|sbin)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'USER\s+(?!root)\w+'
+      - '# nosec'
+      - 'multi-stage.*build'
+
+  - id: "UNI-MISCONF-002"
+    name: "Kubernetes privileged container"
+    description: "Detects Kubernetes pod specs with privileged security context or dangerous capabilities. Privileged containers have full host access and bypass all security boundaries."
+    severity: CRITICAL
+    cwe: "CWE-250"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H"
+    mitre_attack: "T1611"
+    nist_csf: ["PR.AC-4", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Set privileged: false, drop ALL capabilities, and add only required ones. Use securityContext with readOnlyRootFilesystem: true, runAsNonRoot: true, and allowPrivilegeEscalation: false."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html"
+      - "https://kubernetes.io/docs/concepts/security/pod-security-standards/"
+    patterns:
+      - type: regex
+        pattern: 'privileged\s*:\s*true'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'allowPrivilegeEscalation\s*:\s*true'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'capabilities\s*:\s*\n\s*add\s*:\s*\n\s*-\s*(?:ALL|SYS_ADMIN|NET_ADMIN|SYS_PTRACE)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'initContainer'
+      - '#\s*nosec'
+      - 'test|mock|example'
+
+  - id: "UNI-MISCONF-003"
+    name: "Debug mode enabled in production configuration"
+    description: "Detects debug mode being enabled in application configurations. Debug mode exposes stack traces, internal paths, and sensitive information that aids attackers in reconnaissance."
+    severity: MEDIUM
+    cwe: "CWE-489"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1592"
+    nist_csf: ["PR.IP-1", "DE.CM-4"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    owasp_top10: "A05:2021"
+    skip_languages: ["c", "cpp", "rust", "go"]
+    remediation: "Disable debug mode in production environments. Use environment-specific configuration files and ensure DEBUG/debug settings are false in production deployments."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html"
+      - "https://cwe.mitre.org/data/definitions/489.html"
+    patterns:
+      - type: regex
+        pattern: 'DEBUG\s*=\s*[Tt]rue'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'debug\s*[=:]\s*(?:true|1|yes|on)'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: 'app\.debug\s*=\s*true'
+        flags: [MULTILINE, IGNORECASE]
+    false_positive_filters:
+      - '\.env\.example'
+      - '\.env\.development'
+      - 'settings\.dev\.'
+      - '#\s*nosec'
+      - 'test|spec'
+
+  - id: "UNI-MISCONF-004"
+    name: "Flask debug mode enabled"
+    description: "Detects Flask applications running with debug=True or FLASK_DEBUG=1. Flask's debug mode enables the Werkzeug debugger which provides an interactive console that can execute arbitrary Python code."
+    severity: HIGH
+    cwe: "CWE-489"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1059.006"
+    nist_csf: ["PR.IP-1", "DE.CM-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Never use debug=True in production. Set FLASK_DEBUG=0 and FLASK_ENV=production. Use a proper WSGI server like Gunicorn instead of the Flask development server."
+    references:
+      - "https://flask.palletsprojects.com/en/latest/debugging/"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: 'app\.run\s*\([^)]*debug\s*=\s*True'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'FLASK_DEBUG\s*=\s*[1]'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'FLASK_ENV\s*=\s*["\''"]?development["\''"]?'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'app\.config\s*\[\s*["\''"]DEBUG["\''"]\s*\]\s*=\s*True'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'if\s+__name__\s*==\s*["\''"]__main__["\''"]'
+      - '\.env\.example'
+      - '#\s*nosec'
+      - 'test|spec|conftest'
+
+  - id: "UNI-MISCONF-005"
+    name: "TLS/SSL verification disabled"
+    description: "Detects disabled TLS/SSL certificate verification across languages. Disabling verification allows man-in-the-middle attacks and exposes communications to interception."
+    severity: HIGH
+    cwe: "CWE-295"
+    cvss_score: 7.4
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-2", "PR.DS-5"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A02:2021"
+    skip_languages: ["c", "rust"]
+    remediation: "Always verify TLS certificates in production. Use proper CA bundles and pin certificates for sensitive connections. Only disable verification in controlled test environments."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html"
+      - "https://cwe.mitre.org/data/definitions/295.html"
+    patterns:
+      - type: regex
+        pattern: '(?<![.\w])verify\s*=\s*False'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'InsecureSkipVerify\s*:\s*true'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*["\''"]?0["\''"]?'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'ServerCertificateValidationCallback\s*=\s*\(\s*[^)]*\)\s*=>\s*true'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'rejectUnauthorized\s*:\s*false'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'no_verify'
+      - 'test|spec|mock'
+      - '#\s*nosec'
+      - '//\s*nosec'
+      - 'development|localhost'

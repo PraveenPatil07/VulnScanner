@@ -1,0 +1,125 @@
+language: csharp
+category: INSECURE_DESERIALIZATION
+rules:
+  - id: "CS-DESER-001"
+    name: "BinaryFormatter deserialization"
+    description: "Detects usage of BinaryFormatter.Deserialize which is inherently unsafe and can lead to remote code execution. BinaryFormatter has been deprecated in .NET 5+ due to security risks."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1055"
+    nist_csf: ["PR.DS-5", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Replace BinaryFormatter with System.Text.Json or MessagePack with type restrictions. If binary serialization is required, use a type-restricted serializer with an allowlist of permitted types."
+    references:
+      - "https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: 'BinaryFormatter\s*\(\s*\)\.Deserialize\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+BinaryFormatter\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:bf|formatter|binaryFormatter)\s*\.\s*Deserialize\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '#pragma\s+warning\s+disable\s+SYSLIB0011'
+      - '//\s*nosec'
+      - 'SerializationBinder'
+
+  - id: "CS-DESER-002"
+    name: "JavaScriptSerializer with type resolver"
+    description: "Detects JavaScriptSerializer instantiated with a SimpleTypeResolver or custom JavaScriptTypeResolver, which allows deserialization of arbitrary types and can lead to remote code execution."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1055"
+    nist_csf: ["PR.DS-5", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Do not use JavaScriptSerializer with a type resolver. Use System.Text.Json with typed deserialization, or if Newtonsoft.Json is needed, use TypeNameHandling.None."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
+      - "https://learn.microsoft.com/en-us/dotnet/api/system.web.script.serialization.javascriptserializer"
+    patterns:
+      - type: regex
+        pattern: 'new\s+JavaScriptSerializer\s*\(\s*new\s+SimpleTypeResolver\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+JavaScriptSerializer\s*\(\s*new\s+\w*TypeResolver'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'JavaScriptSerializer\s*\(\s*(?!null\s*\))[^)]+\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'JavaScriptSerializer\s*\(\s*\)'
+      - 'JavaScriptSerializer\s*\(\s*null\s*\)'
+      - '//\s*nosec'
+
+  - id: "CS-DESER-003"
+    name: "Newtonsoft.Json TypeNameHandling enabled"
+    description: "Detects Newtonsoft.Json (Json.NET) configured with TypeNameHandling set to anything other than None. This allows deserialization of arbitrary .NET types, enabling remote code execution via gadget chains."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1055"
+    nist_csf: ["PR.DS-5", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Set TypeNameHandling = TypeNameHandling.None (the default). If polymorphic deserialization is required, use a custom SerializationBinder with a strict allowlist of permitted types."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
+      - "https://www.newtonsoft.com/json/help/html/T_Newtonsoft_Json_TypeNameHandling.htm"
+    patterns:
+      - type: regex
+        pattern: 'TypeNameHandling\s*=\s*TypeNameHandling\.(?:All|Auto|Objects|Arrays)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'TypeNameHandling\s*=\s*(?:TypeNameHandling\s*\.\s*)?(?:All|Auto|Objects|Arrays)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'JsonSerializerSettings\s*\{[^}]*TypeNameHandling\s*=\s*(?!TypeNameHandling\.None)'
+        flags: [MULTILINE, DOTALL]
+    false_positive_filters:
+      - 'SerializationBinder'
+      - 'ISerializationBinder'
+      - 'KnownTypesBinder'
+      - '//\s*nosec'
+
+  - id: "CS-DESER-004"
+    name: "Unsafe deserializers (SoapFormatter, LosFormatter, ObjectStateFormatter)"
+    description: "Detects usage of inherently unsafe .NET serializers including SoapFormatter, LosFormatter, and ObjectStateFormatter. These serializers allow arbitrary type instantiation during deserialization."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1055"
+    nist_csf: ["PR.DS-5", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Replace with secure alternatives like System.Text.Json. These formatters cannot be made safe and should not be used with untrusted data under any circumstances."
+    references:
+      - "https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: 'new\s+SoapFormatter\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+LosFormatter\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+ObjectStateFormatter\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:SoapFormatter|LosFormatter|ObjectStateFormatter)\s*\(\s*\)\s*\.\s*Deserialize\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '//\s*nosec'
+      - '#pragma\s+warning\s+disable'

@@ -1,0 +1,85 @@
+language: python
+category: SSTI
+rules:
+  - id: PY-SSTI-001
+    name: "Jinja2 render_template_string with user input"
+    description: "render_template_string() called with user-controlled input enables Server-Side Template Injection, allowing arbitrary code execution."
+    severity: CRITICAL
+    cwe: "CWE-1336"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use render_template() with template files. Never pass user input as the template string. If dynamic templates are needed, use a sandboxed environment."
+    references:
+      - "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server-side_Template_Injection"
+    patterns:
+      - type: regex
+        pattern: 'render_template_string\s*\(\s*(request\.|req\.|user_|input|param|args|data)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'render_template_string\s*\(\s*f["\x27]'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'render_template_string\s*\([^"\x27\)]+\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'render_template_string\s*\(\s*["\x27][^"\x27]*["\x27]\s*\)'
+      - '^\s*#'
+
+  - id: PY-SSTI-002
+    name: "Jinja2 Template() from user input"
+    description: "Jinja2 Template class instantiated with user-controlled string, enabling SSTI attacks."
+    severity: CRITICAL
+    cwe: "CWE-1336"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Load templates from the filesystem using Environment.get_template(). Never construct Template() with user input."
+    references:
+      - "https://cwe.mitre.org/data/definitions/1336.html"
+    patterns:
+      - type: regex
+        pattern: 'Template\s*\(\s*(request\.|req\.|user_|input|param|args|data)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Template\s*\([^"\x27\)]+\)\.render\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'Template\s*\(\s*["\x27]'
+      - '^\s*#'
+      - 'from\s+string\s+import'
+      - 'string\.Template'
+      - 'InfoTemplate'
+      - 'class\s+Template'
+
+  - id: PY-SSTI-003
+    name: "Jinja2 Environment.from_string with user input"
+    description: "Jinja2 Environment.from_string() creates a template from a string, enabling SSTI if the string is user-controlled."
+    severity: CRITICAL
+    cwe: "CWE-1336"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use get_template() to load from the filesystem. Enable SandboxedEnvironment if dynamic templates are required."
+    references:
+      - "https://cwe.mitre.org/data/definitions/1336.html"
+    patterns:
+      - type: regex
+        pattern: '(env|environment)\.from_string\s*\(\s*(request\.|req\.|user_|input|param|args|data)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.from_string\s*\([^"\x27\)]+\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '\.from_string\s*\(\s*["\x27]'
+      - 'SandboxedEnvironment'
+      - '^\s*#'

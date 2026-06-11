@@ -1,0 +1,68 @@
+language: go
+category: SSRF
+rules:
+  - id: GO-SSRF-001
+    name: "HTTP client with user-controlled URL"
+    description: "HTTP request made to user-controlled URL, enabling SSRF attacks against internal services."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate URLs against an allowlist. Block private IP ranges."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'http\.(Get|Post|Head|PostForm)\s*\(\s*(?:r\.|req\.|request\.|url|userURL|input|param|target)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'http\.NewRequest\s*\(\s*"[^"]+"\s*,\s*(?:r\.|req\.|userURL|input|param|target)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: GO-SSRF-002
+    name: "URL from request used in outbound call"
+    description: "URL extracted from HTTP request parameters used to make outbound HTTP requests."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Parse URLs and validate the host against an allowlist. Resolve DNS and check against private IP ranges."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'r\.(?:URL\.Query|FormValue|PostFormValue)\s*\([^)]+\).*http\.'
+        flags: [MULTILINE, DOTALL]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: GO-SSRF-003
+    name: "net.Dial with user-controlled address"
+    description: "net.Dial used with user-controlled address, enabling connections to internal services."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate target addresses against an allowlist of permitted hosts and ports."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'net\.Dial\w*\s*\(\s*"[^"]+"\s*,\s*(?:r\.|req\.|addr|host|target|input|param)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

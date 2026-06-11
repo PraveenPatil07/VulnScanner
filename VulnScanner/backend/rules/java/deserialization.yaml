@@ -1,0 +1,76 @@
+language: java
+category: INSECURE_DESERIALIZATION
+rules:
+  - id: JAVA-DESER-001
+    name: "ObjectInputStream.readObject with untrusted data"
+    description: "ObjectInputStream deserializes Java objects from streams. Untrusted data can trigger Remote Code Execution through gadget chains."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use ObjectInputFilter (Java 9+) to restrict deserializable classes. Consider using JSON or Protocol Buffers instead. Validate data integrity with HMAC before deserializing."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: '(?:ObjectInputStream|OIS|ois)\s*.*\.\s*readObject\s*\(\s*\)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+ObjectInputStream\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'ObjectInputFilter'
+      - 'ValidatingObjectInputStream'
+      - '^\s*//'
+
+  - id: JAVA-DESER-002
+    name: "XMLDecoder with untrusted data"
+    description: "java.beans.XMLDecoder can execute arbitrary code through XML-serialized Java beans."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Do not use XMLDecoder with untrusted input. Use a safe serialization format."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'new\s+XMLDecoder\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'XMLDecoder\s*.*\.readObject\s*\(\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JAVA-DESER-003
+    name: "XStream without security framework"
+    description: "XStream.fromXML() without security framework can deserialize arbitrary objects, leading to RCE."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use XStream's security framework: xstream.addPermission(NoTypePermission.NONE) and explicitly allow required types."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: '(?:xstream|XStream)\s*\.\s*fromXML\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'addPermission'
+      - 'NoTypePermission'
+      - 'setupDefaultSecurity'
+      - '^\s*//'

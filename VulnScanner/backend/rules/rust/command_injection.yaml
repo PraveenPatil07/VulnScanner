@@ -1,0 +1,53 @@
+language: rust
+category: COMMAND_INJECTION
+rules:
+  - id: RS-CMDI-001
+    name: "Command::new with shell"
+    description: "std::process::Command invoked with shell interpreter, enabling command injection via arguments."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use Command::new with the program directly and .arg() for each argument. Avoid shell invocation."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "Command::new\\s*\\(\\s*\"(?:/bin/sh|/bin/bash|sh|bash|cmd)\""
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "Command::new\\s*\\([^)]*\\)\\.arg\\s*\\(\\s*\"-c\""
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: RS-CMDI-002
+    name: "Format string in command arguments"
+    description: "User input interpolated into command arguments via format!() macro."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Pass user input as separate .arg() calls. Never interpolate into shell command strings."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "\\.arg\\s*\\(\\s*&?format!\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\.args\\s*\\(\\s*&?\\[\\s*&?format!\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

@@ -1,0 +1,51 @@
+language: typescript
+category: BROKEN_ACCESS_CONTROL
+rules:
+  - id: TS-BAC-001
+    name: "Missing authentication middleware"
+    description: "Route handler without authentication middleware, potentially exposing sensitive endpoints."
+    severity: HIGH
+    cwe: "CWE-306"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1078"
+    nist_csf:
+      - "PR.AC-01"
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Add authentication middleware to all sensitive routes."
+    references:
+      - "https://owasp.org/Top10/A01_2021-Broken_Access_Control/"
+    patterns:
+      - type: regex
+        pattern: "(?:app|router)\\.(get|post|put|delete|patch)\\s*\\(\\s*[\"']/(?:admin|api/user|api/settings|dashboard)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "auth|authenticate|isAuthenticated|requireAuth|protect|guard"
+      - "middleware"
+
+  - id: TS-BAC-002
+    name: "CORS wildcard origin"
+    description: "CORS configured with wildcard (*) origin allows any website to make authenticated requests."
+    severity: MEDIUM
+    cwe: "CWE-942"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1189"
+    nist_csf:
+      - "PR.AC-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Configure CORS with specific allowed origins instead of wildcard."
+    references:
+      - "https://owasp.org/www-community/attacks/CORS_OriginHeaderScrutiny"
+    patterns:
+      - type: regex
+        pattern: "(?:origin|Access-Control-Allow-Origin)\\s*[:=]\\s*[\"']\\*[\"']"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "cors\\s*\\(\\s*\\{[^}]*origin\\s*:\\s*true"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "development|dev|local"

@@ -1,0 +1,33 @@
+language: universal
+category: LOG_INJECTION
+
+rules:
+  - id: UNI-LOG-001
+    name: "Potential log injection via user input"
+    description: "User-controlled input written directly to logs without sanitization can enable log forging, CRLF injection, or log-based attacks."
+    severity: MEDIUM
+    cwe: "CWE-117"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1070.006"
+    nist_csf: ["DE.CM-1"]
+    confidence: MEDIUM
+    false_positive_risk: HIGH
+    owasp_top10: "A09:2021"
+    remediation: "Sanitize user input before logging. Remove newlines (\\n, \\r) and control characters. Use structured logging (JSON) to prevent log injection."
+    references:
+      - "https://owasp.org/www-community/attacks/Log_Injection"
+      - "https://cwe.mitre.org/data/definitions/117.html"
+    patterns:
+      - type: regex
+        pattern: '(?:logger|logging|log)\.(info|warning|error|debug|critical)\s*\(\s*f["\x27].*\{.*(?:request|req|user_input|params|query|body)'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: 'console\.(log|warn|error|info)\s*\(\s*.*(?:req\.|request\.|params|query|body)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+      - '^\s*//'
+      - 'sanitize'
+      - 'escape'
+    skip_languages: ["c", "cpp"]

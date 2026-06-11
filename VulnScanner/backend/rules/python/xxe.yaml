@@ -1,0 +1,82 @@
+language: python
+category: XXE
+rules:
+  - id: PY-XXE-001
+    name: "xml.etree.ElementTree parsing without defusedxml"
+    description: "Standard library XML parser used without defusedxml protection, vulnerable to XXE attacks that can read local files or perform SSRF."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use defusedxml library instead of standard xml.etree.ElementTree. Install with: pip install defusedxml. Replace xml.etree.ElementTree with defusedxml.ElementTree."
+    references:
+      - "https://cwe.mitre.org/data/definitions/611.html"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: '(?:xml\.etree\.ElementTree|ET)\.(parse|fromstring|iterparse)\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'from\s+xml\.etree\s+import\s+ElementTree'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'import\s+xml\.etree\.ElementTree'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'defusedxml'
+      - '^\s*#'
+
+  - id: PY-XXE-002
+    name: "lxml parsing with resolve_entities enabled"
+    description: "lxml XML parser used with entity resolution enabled, vulnerable to XXE attacks."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Create parser with resolve_entities=False: parser = etree.XMLParser(resolve_entities=False, no_network=True)"
+    references:
+      - "https://cwe.mitre.org/data/definitions/611.html"
+    patterns:
+      - type: regex
+        pattern: 'lxml\.etree\.(fromstring|parse|XML)\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'etree\.XMLParser\s*\([^)]*resolve_entities\s*=\s*True'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'resolve_entities\s*=\s*False'
+      - 'no_network\s*=\s*True'
+      - '^\s*#'
+
+  - id: PY-XXE-003
+    name: "minidom XML parsing"
+    description: "xml.dom.minidom used to parse XML data, vulnerable to XXE attacks without proper configuration."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use defusedxml.minidom instead of xml.dom.minidom."
+    references:
+      - "https://cwe.mitre.org/data/definitions/611.html"
+    patterns:
+      - type: regex
+        pattern: 'minidom\.(parse|parseString)\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'from\s+xml\.dom\s+import\s+minidom'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'defusedxml'
+      - '^\s*#'

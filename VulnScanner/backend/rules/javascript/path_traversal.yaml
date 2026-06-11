@@ -1,0 +1,76 @@
+language: javascript
+category: PATH_TRAVERSAL
+rules:
+  - id: JS-PATH-001
+    name: "Path concatenation with user input"
+    description: "File path constructed by concatenating user input without validation, enabling path traversal."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use path.resolve() and verify the result starts with the expected base directory. Use path.normalize() and reject paths containing '..'."
+    references:
+      - "https://owasp.org/www-community/attacks/Path_Traversal"
+    patterns:
+      - type: regex
+        pattern: '(?:fs\.(readFile|writeFile|readFileSync|writeFileSync|createReadStream|createWriteStream|access|stat))\s*\(\s*(?:req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'path\.join\s*\([^)]*(?:req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'path\.resolve'
+      - '\.startsWith\s*\('
+      - '\.includes\s*\(\s*["\x27]\.\.'
+      - '^\s*//'
+
+  - id: JS-PATH-002
+    name: "Express static file serving with user path"
+    description: "Express sendFile or res.download used with user-controlled path."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use res.sendFile with the root option set to restrict the base directory. Validate path parameters."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'res\.(sendFile|download)\s*\(\s*(?:req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'res\.(sendFile|download)\s*\(\s*(?:path\.join|`)[^)]*(?:req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'root\s*:'
+      - '^\s*//'
+
+  - id: JS-PATH-003
+    name: "Directory traversal in path.resolve with user input"
+    description: "path.resolve() with user input where the resolved path is not validated against a base directory."
+    severity: MEDIUM
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "After path.resolve(), verify the result starts with the expected base directory using startsWith()."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'path\.resolve\s*\([^)]*(?:req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '\.startsWith\s*\('
+      - '^\s*//'

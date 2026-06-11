@@ -1,0 +1,142 @@
+language: python
+category: SQL_INJECTION
+rules:
+  - id: PY-SQLI-001
+    name: "F-string SQL query interpolation"
+    description: "User input is directly interpolated into a SQL string using f-string, enabling SQL injection attacks."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries (cursor.execute(sql, params)) or an ORM. Never interpolate user input into SQL strings."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+      - "https://cwe.mitre.org/data/definitions/89.html"
+    patterns:
+      - type: regex
+        pattern: "(?i)(execute|executemany)\\s*\\(\\s*f[\"']"
+      - type: regex
+        pattern: "(?i)(cursor|conn|connection|db)\\s*\\.\\s*(execute|executemany)\\s*\\(\\s*f[\"']"
+    false_positive_filters:
+      - "^\\s*#"
+
+  - id: PY-SQLI-002
+    name: "Percent-format SQL query"
+    description: "SQL query constructed using %-formatting with user input, enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries with placeholders: cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?i)(execute|executemany)\\s*\\(\\s*[\"'][^\"']*(%s|%d|%r)[^\"']*[\"']\\s*%\\s*"
+    false_positive_filters:
+      - "\\.execute\\s*\\(\\s*[\"'][^\"']*[\"']\\s*,\\s*\\("
+
+  - id: PY-SQLI-003
+    name: "String concatenation in SQL query"
+    description: "SQL query built by concatenating strings with user input using the + operator."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries instead of string concatenation."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?i)(execute|executemany)\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\+\\s*"
+    false_positive_filters:
+      - "^\\s*#"
+
+  - id: PY-SQLI-004
+    name: "Format method in SQL query"
+    description: "SQL query constructed using .format() method with user input, enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries or ORM methods instead of .format() for SQL construction."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?i)(execute|executemany)\\s*\\(\\s*[\"'][^\"']*\\{[^}]*\\}[^\"']*[\"']\\.format\\s*\\("
+    false_positive_filters: []
+
+  - id: PY-SQLI-005
+    name: "Django ORM extra/raw with user input"
+    description: "Django ORM .extra() or .raw() method used with string formatting, bypassing ORM protection."
+    severity: HIGH
+    cwe: "CWE-89"
+    cvss_score: 8.6
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Django ORM query methods with proper parameterization. Avoid .extra() and .raw() with user input."
+    references:
+      - "https://docs.djangoproject.com/en/4.2/ref/models/querysets/#extra"
+    patterns:
+      - type: regex
+        pattern: "\\.extra\\s*\\(\\s*(?:where|select|tables)\\s*=\\s*\\["
+      - type: regex
+        pattern: "\\.raw\\s*\\(\\s*f[\"']"
+      - type: regex
+        pattern: "\\.raw\\s*\\(\\s*[\"'][^\"']*[\"']\\s*%\\s*"
+    false_positive_filters: []
+
+  - id: PY-SQLI-006
+    name: "SQLAlchemy text() with interpolation"
+    description: "SQLAlchemy text() function used with f-string or string concatenation, bypassing parameter binding."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use SQLAlchemy bindparam() or text() with :param syntax: text('SELECT * FROM users WHERE id = :id').bindparams(id=user_id)"
+    references:
+      - "https://docs.sqlalchemy.org/en/20/core/sqlelement.html"
+    patterns:
+      - type: regex
+        pattern: "(?i)text\\s*\\(\\s*f[\"']"
+      - type: regex
+        pattern: "(?i)text\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\+\\s*"
+      - type: regex
+        pattern: "(?i)text\\s*\\(\\s*[\"'][^\"']*\\{[^}]*\\}[^\"']*[\"']\\.format\\s*\\("
+    false_positive_filters: []

@@ -1,0 +1,76 @@
+language: javascript
+category: PROTOTYPE_POLLUTION
+rules:
+  - id: JS-PROTO-001
+    name: "Object property assignment with user-controlled key"
+    description: "Object property set using bracket notation with user-controlled key. Attacker can set __proto__ to pollute Object prototype."
+    severity: HIGH
+    cwe: "CWE-1321"
+    cvss_score: 7.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate keys against __proto__, constructor, and prototype. Use Map instead of plain objects. Use Object.create(null) for dictionary objects."
+    references:
+      - "https://cwe.mitre.org/data/definitions/1321.html"
+    patterns:
+      - type: regex
+        pattern: '\w+\[(?:req\.|request\.|params\.|body\.|query\.|key|prop|name|field|attr)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\w+\[\w+\]\s*=\s*(?:req\.|request\.|params\.|body\.|query\.|value|val|data)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '__proto__|constructor|prototype'
+      - 'hasOwnProperty'
+      - '^\s*//'
+
+  - id: JS-PROTO-002
+    name: "Recursive object merge without prototype check"
+    description: "Deep merge or recursive assign function that does not skip __proto__ keys, enabling prototype pollution."
+    severity: HIGH
+    cwe: "CWE-1321"
+    cvss_score: 7.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "In recursive merge functions, skip keys named __proto__, constructor, and prototype. Use established libraries with prototype pollution fixes."
+    references:
+      - "https://cwe.mitre.org/data/definitions/1321.html"
+    patterns:
+      - type: regex
+        pattern: '(?:deepMerge|deepAssign|merge|extend|mixin)\s*(?:=|:)\s*(?:function|\()'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Object\.assign\s*\(\s*(?:target|dest|obj)\s*,\s*(?:req\.|request\.|body|source|input|data)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '__proto__'
+      - 'constructor'
+      - 'hasOwnProperty'
+      - '^\s*//'
+
+  - id: JS-PROTO-003
+    name: "lodash merge with untrusted input"
+    description: "lodash.merge or _.merge used with user-controlled objects. Older lodash versions are vulnerable to prototype pollution."
+    severity: HIGH
+    cwe: "CWE-1321"
+    cvss_score: 7.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Update lodash to latest version. Validate input objects before merging. Remove __proto__ keys from user input."
+    references:
+      - "https://cwe.mitre.org/data/definitions/1321.html"
+    patterns:
+      - type: regex
+        pattern: '(?:_|lodash)\.(merge|defaultsDeep|mergeWith)\s*\([^,]+,\s*(?:req\.|request\.|body|input|data|user)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

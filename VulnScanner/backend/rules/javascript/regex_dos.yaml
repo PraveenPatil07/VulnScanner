@@ -1,0 +1,73 @@
+language: javascript
+category: REGEX_DOS
+rules:
+  - id: JS-REDOS-001
+    name: "Regex with nested quantifiers"
+    description: "Regular expression with nested quantifiers (e.g., (a+)+) causing catastrophic backtracking on crafted input."
+    severity: HIGH
+    cwe: "CWE-1333"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    mitre_attack: "T1499"
+    nist_csf: ["PR.DS-05", "PR.PT-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Simplify regex to avoid nested quantifiers. Use atomic groups or possessive quantifiers. Set timeout limits on regex operations. Consider using RE2."
+    references:
+      - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+    patterns:
+      - type: regex
+        pattern: '/[^/]*\([^)]*[+*][^)]*\)[+*][^/]*/[gimsuy]*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+RegExp\s*\(\s*["\x27`][^"\x27`]*\([^)]*[+*][^)]*\)[+*]'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-REDOS-002
+    name: "User-controlled regex construction"
+    description: "Regular expression constructed from user input using new RegExp(). Attacker can inject catastrophic backtracking patterns."
+    severity: HIGH
+    cwe: "CWE-1333"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    mitre_attack: "T1499"
+    nist_csf: ["PR.DS-05", "PR.PT-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Never construct regex from user input. If necessary, escape special characters with a regex escape function and set a timeout."
+    references:
+      - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+    patterns:
+      - type: regex
+        pattern: 'new\s+RegExp\s*\(\s*(?:req\.|request\.|params\.|body\.|query\.|user|input)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'escapeRegExp'
+      - 'escape.*[Rr]eg[Ee]x'
+      - '^\s*//'
+
+  - id: JS-REDOS-003
+    name: "Complex regex with catastrophic backtracking potential"
+    description: "Regular expression pattern with overlapping alternatives and repetition operators that can cause exponential backtracking."
+    severity: MEDIUM
+    cwe: "CWE-1333"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    mitre_attack: "T1499"
+    nist_csf: ["PR.DS-05", "PR.PT-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Simplify the regex pattern. Avoid overlapping character classes in alternations with repetition."
+    references:
+      - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+    patterns:
+      - type: regex
+        pattern: '/[^/]*\(\.\*\)[^/]*\(\.\*\)[^/]*/[gimsuy]*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '/[^/]*(?:\[[^\]]*\][+*]\s*){2,}[^/]*/[gimsuy]*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

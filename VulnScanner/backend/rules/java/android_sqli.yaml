@@ -1,0 +1,76 @@
+language: java
+category: SQL_INJECTION
+rules:
+  - id: JAVA-SQLI-005
+    name: "Android SQLite rawQuery with concatenation"
+    description: "SQL query built with string concatenation passed to rawQuery(), enabling SQL injection on Android."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries: db.rawQuery(\"SELECT * FROM table WHERE id = ?\", new String[]{userId});"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: 'rawQuery\s*\(\s*["\x27][^"\x27]*["\x27]\s*\+\s*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'rawQuery\s*\(\s*[^,)]*\+[^,)]*,'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+
+  - id: JAVA-SQLI-006
+    name: "Android execSQL with concatenation"
+    description: "SQL statement built with string concatenation passed to execSQL(), enabling SQL injection."
+    severity: HIGH
+    cwe: "CWE-89"
+    cvss_score: 8.6
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use compileStatement with parameter binding or Room DAO with parameterized queries."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: 'execSQL\s*\(\s*["\x27][^"\x27]*["\x27]\s*\+\s*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'execSQL\s*\(\s*[^)]*\+[^)]*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+      - 'CREATE TABLE'
+      - 'DROP TABLE'
+
+  - id: JAVA-SQLI-007
+    name: "SQL string concatenation in variable"
+    description: "SQL query built with string concatenation and stored in a variable, likely passed to execute later."
+    severity: HIGH
+    cwe: "CWE-89"
+    cvss_score: 8.6
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use PreparedStatement with ? placeholders or Room DAO annotations."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?i)(?:String|val|var)\s+\w*(?:query|sql|stmt)\w*\s*=\s*"(?:SELECT|INSERT|UPDATE|DELETE|DROP)\b[^"]*"\s*\+\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'

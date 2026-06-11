@@ -1,0 +1,60 @@
+language: c
+category: COMMAND_INJECTION
+rules:
+  - id: C-CMDI-001
+    name: "system() with variable argument"
+    description: "system() called with a variable or formatted string, vulnerable to command injection."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use exec-family functions (execve, execvp) with explicit argument arrays instead of system()."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "\\bsystem\\s*\\(\\s*[a-zA-Z_]"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bpopen\\s*\\(\\s*[a-zA-Z_]"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"
+      - "#define"
+      - "BANNED"
+
+  - id: C-CMDI-002
+    name: "exec with shell invocation"
+    description: "Executing shell interpreter with user-controlled arguments via exec functions."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Pass arguments as separate array elements to execve/execvp. Never pass user input to a shell."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "\\bexecl[pe]?\\s*\\([^)]*\"/bin/sh\""
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bexecl[pe]?\\s*\\([^)]*\"/bin/bash\""
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bexecv[pe]?\\s*\\([^)]*\"/bin/sh\""
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"

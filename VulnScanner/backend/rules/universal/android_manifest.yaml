@@ -1,0 +1,50 @@
+language: universal
+category: INSECURE_CONFIGURATION
+rules:
+  - id: UNI-ANDROID-001
+    name: "Exported component without permission"
+    description: "Activity, Service, or BroadcastReceiver exported without permission restriction can be invoked by malicious apps."
+    severity: MEDIUM
+    cwe: "CWE-926"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+    mitre_attack: "T1203"
+    nist_csf: ["PR.AC-04"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    skip_languages: ["python", "c", "cpp", "rust", "go", "ruby", "php"]
+    remediation: "Set android:exported=\"false\" or add android:permission to restrict access."
+    references:
+      - "https://developer.android.com/guide/topics/manifest/activity-element"
+    patterns:
+      - type: regex
+        pattern: 'android:exported\s*=\s*"true"'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'android:permission'
+      - '^\s*<!--'
+
+  - id: UNI-ANDROID-002
+    name: "Cleartext traffic allowed"
+    description: "Application allows cleartext HTTP traffic, making data vulnerable to interception."
+    severity: MEDIUM
+    cwe: "CWE-319"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    skip_languages: ["python", "c", "cpp", "rust", "go", "ruby", "php"]
+    remediation: "Set android:usesCleartextTraffic=\"false\" and use HTTPS for all network requests."
+    references:
+      - "https://developer.android.com/privacy-and-security/security-config"
+    patterns:
+      - type: regex
+        pattern: 'usesCleartextTraffic\s*=\s*"true"'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'cleartextTrafficPermitted\s*=\s*"true"'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*<!--'

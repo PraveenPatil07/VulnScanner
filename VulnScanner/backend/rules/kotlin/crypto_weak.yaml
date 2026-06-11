@@ -1,0 +1,57 @@
+language: kotlin
+category: INSECURE_CRYPTO
+rules:
+  - id: KT-CRYPTO-001
+    name: "Insecure random number generator"
+    description: "java.util.Random used for security-sensitive operations instead of SecureRandom."
+    severity: MEDIUM
+    cwe: "CWE-330"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1600"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use java.security.SecureRandom or kotlin.random.Random for security-sensitive operations."
+    references:
+      - "https://cwe.mitre.org/data/definitions/330.html"
+    patterns:
+      - type: regex
+        pattern: "java\\.util\\.Random\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "Random\\(\\)\\.next"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "SecureRandom"
+      - "test|mock|fake"
+      - "^\\s*//"
+
+  - id: KT-CRYPTO-002
+    name: "Weak cryptographic algorithm"
+    description: "Use of weak or deprecated cryptographic algorithms (MD5, SHA1, DES, RC4)."
+    severity: HIGH
+    cwe: "CWE-327"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1600"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use SHA-256 or stronger for hashing. Use AES-256-GCM for encryption."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: "MessageDigest\\.getInstance\\s*\\(\\s*\"(?:MD5|SHA-?1|SHA1)\"\\s*\\)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "Cipher\\.getInstance\\s*\\(\\s*\"(?:DES|RC4|RC2|Blowfish)(?:/|\")"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "Cipher\\.getInstance\\s*\\(\\s*\"AES/ECB"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

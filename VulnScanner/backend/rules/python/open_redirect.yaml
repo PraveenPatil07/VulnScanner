@@ -1,0 +1,76 @@
+language: python
+category: OPEN_REDIRECT
+rules:
+  - id: PY-REDIR-001
+    name: "Flask/Django redirect with user input"
+    description: "Redirect function called with user-controlled URL, enabling phishing attacks via open redirect."
+    severity: MEDIUM
+    cwe: "CWE-601"
+    cvss_score: 4.7
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N"
+    mitre_attack: "T1566"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate redirect URLs against an allowlist of permitted domains. Use relative paths for internal redirects. Reject URLs with external schemes."
+    references:
+      - "https://cwe.mitre.org/data/definitions/601.html"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: 'redirect\s*\(\s*(request\.|req\.|user_|input|param|args|url|next|return_to|redirect_url|target|destination)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'redirect\s*\(\s*request\.(args|form|values)\.(get|__getitem__)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'url_for\s*\('
+      - 'is_safe_url'
+      - '^\s*#'
+
+  - id: PY-REDIR-002
+    name: "Location header with user input"
+    description: "HTTP Location header set with user-controlled value, enabling open redirect attacks."
+    severity: MEDIUM
+    cwe: "CWE-601"
+    cvss_score: 4.7
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N"
+    mitre_attack: "T1566"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate redirect targets against an allowlist."
+    references:
+      - "https://cwe.mitre.org/data/definitions/601.html"
+    patterns:
+      - type: regex
+        pattern: '(?i)headers\[.?Location.?\]\s*=\s*(request\.|req\.|user_|input|param|args)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?i)response\.headers\[.?location.?\]\s*=\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+
+  - id: PY-REDIR-003
+    name: "HttpResponseRedirect with user-controlled URL"
+    description: "Django HttpResponseRedirect with user-controlled next parameter, enabling open redirect."
+    severity: MEDIUM
+    cwe: "CWE-601"
+    cvss_score: 4.7
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N"
+    mitre_attack: "T1566"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Django's url_has_allowed_host_and_scheme() to validate redirect targets."
+    references:
+      - "https://cwe.mitre.org/data/definitions/601.html"
+    patterns:
+      - type: regex
+        pattern: 'HttpResponseRedirect\s*\(\s*(request\.|req\.|user_|input|param|args|next|url)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'url_has_allowed_host_and_scheme'
+      - 'is_safe_url'
+      - '^\s*#'

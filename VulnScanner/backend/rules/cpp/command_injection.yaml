@@ -1,0 +1,57 @@
+language: cpp
+category: COMMAND_INJECTION
+rules:
+  - id: CPP-CMDI-001
+    name: "system() usage in C++"
+    description: "system() executes commands via shell, vulnerable to injection with user input."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use exec-family or posix_spawn with explicit argument arrays. Avoid shell invocation."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "\\bsystem\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bpopen\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\b_popen\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"
+
+  - id: CPP-CMDI-002
+    name: "Shell execution via exec"
+    description: "exec-family function invoked with shell interpreter and user-controlled arguments."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Pass arguments as array to execve/posix_spawn without shell interpreter."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "\\bexecl[pe]?\\s*\\([^)]*\"/bin/"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bexecv[pe]?\\s*\\([^)]*\"/bin/"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

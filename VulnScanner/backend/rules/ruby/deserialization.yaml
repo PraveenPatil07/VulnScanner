@@ -1,0 +1,70 @@
+language: ruby
+category: INSECURE_DESERIALIZATION
+rules:
+  - id: RB-DESER-001
+    name: "Marshal.load with untrusted data"
+    description: "Marshal.load deserializes Ruby objects and can execute arbitrary code with crafted data."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use JSON.parse or YAML.safe_load instead. Never unmarshal untrusted data."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'Marshal\.(load|restore)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+
+  - id: RB-DESER-002
+    name: "YAML.load without safe_load"
+    description: "YAML.load can instantiate arbitrary Ruby objects, enabling code execution."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use YAML.safe_load or Psych.safe_load instead of YAML.load."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'YAML\.load\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'safe_load'
+      - 'permitted_classes'
+      - '^\s*#'
+
+  - id: RB-DESER-003
+    name: "ERB/eval with user input"
+    description: "ERB template or eval with user-controlled input enables code injection."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Never pass user input to eval or ERB. Use safe templating."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'ERB\.new\s*\(\s*(?:params|request|input|user)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\beval\s*\(\s*(?:params|request|input|user)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'

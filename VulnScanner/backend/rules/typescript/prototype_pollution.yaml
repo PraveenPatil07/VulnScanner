@@ -1,0 +1,53 @@
+language: typescript
+category: PROTOTYPE_POLLUTION
+rules:
+  - id: TS-PROTO-001
+    name: "Prototype pollution via object merge"
+    description: "Deep merge or recursive assignment without prototype check enables prototype pollution attacks."
+    severity: HIGH
+    cwe: "CWE-1321"
+    cvss_score: 7.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Object.create(null) for lookup objects. Filter __proto__ and constructor keys. Use libraries with prototype pollution protection."
+    references:
+      - "https://cwe.mitre.org/data/definitions/1321.html"
+    patterns:
+      - type: regex
+        pattern: "\\[\\s*[\"']__proto__[\"']\\s*\\]"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\[\\s*[\"']constructor[\"']\\s*\\]\\s*\\[\\s*[\"']prototype[\"']\\s*\\]"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "Object\\.assign\\s*\\(\\s*\\{\\}\\s*,\\s*(?:req\\.|body\\.|params\\.)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "hasOwnProperty"
+      - "Object\\.create\\(null\\)"
+
+  - id: TS-PROTO-002
+    name: "Lodash merge/defaultsDeep with user input"
+    description: "Lodash merge or defaultsDeep with user-controlled input can lead to prototype pollution."
+    severity: HIGH
+    cwe: "CWE-1321"
+    cvss_score: 7.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Update lodash to latest version and validate input keys before merging."
+    references:
+      - "https://cwe.mitre.org/data/definitions/1321.html"
+    patterns:
+      - type: regex
+        pattern: "_\\.(merge|defaultsDeep|set|setWith)\\s*\\([^,]+,\\s*(?:req\\.|body\\.|params\\.)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

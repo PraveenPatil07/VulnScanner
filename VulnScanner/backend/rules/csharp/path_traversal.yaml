@@ -1,0 +1,94 @@
+language: csharp
+category: PATH_TRAVERSAL
+rules:
+  - id: "CS-PATH-001"
+    name: "File.Open with user-controlled path"
+    description: "Detects File.Open, File.ReadAllText, File.WriteAllText, and similar file operations where the path is constructed from user input without validation. Attackers can use ../ sequences to access arbitrary files."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.DS-5", "PR.AC-4"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate file paths using Path.GetFullPath() and ensure the resolved path starts with the expected base directory. Reject paths containing '..' segments. Use Path.GetFileName() to strip directory components from user input."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html"
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'File\.(?:Open|ReadAllText|ReadAllBytes|WriteAllText|WriteAllBytes|Copy|Move|Delete|Exists)\s*\(\s*(?:\$"[^"]*\{[^}]+\}|"[^"]*"\s*\+\s*\w+|[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+(?:FileStream|StreamReader|StreamWriter)\s*\(\s*(?:\$"[^"]*\{[^}]+\}|"[^"]*"\s*\+\s*\w+)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'File\.(?:Open|Read|Write)\w*\s*\(\s*(?:Request|request|HttpContext)\.'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'Path\.GetFullPath'
+      - 'StartsWith\s*\(\s*(?:basePath|baseDir|rootDir)'
+      - 'Path\.GetFileName'
+      - '//\s*nosec'
+
+  - id: "CS-PATH-002"
+    name: "Path.Combine with user input"
+    description: "Detects Path.Combine where a user-controlled segment could be an absolute path, which would discard the base path entirely. Path.Combine('base', '/etc/passwd') returns '/etc/passwd' on Linux."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.DS-5", "PR.AC-4"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "After Path.Combine, verify the result with Path.GetFullPath() and check it starts with the expected base directory. Strip leading slashes and '..' from user input before combining."
+    references:
+      - "https://learn.microsoft.com/en-us/dotnet/api/system.io.path.combine"
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'Path\.Combine\s*\([^)]*(?:Request|request|input|fileName|filePath|userPath|param)\w*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Path\.Combine\s*\([^)]*\$"[^"]*\{[^}]+\}'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Path\.Combine\s*\(\s*\w+,\s*(?:Request|HttpContext|context)\.[^)]+\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'Path\.GetFullPath.*StartsWith'
+      - 'Path\.IsPathRooted.*throw'
+      - 'Replace\s*\(\s*["\''"]\.\.[''\''"]'
+      - '//\s*nosec'
+
+  - id: "CS-PATH-003"
+    name: "Directory operations with user-controlled path"
+    description: "Detects Directory.GetFiles, Directory.EnumerateFiles, or Directory.CreateDirectory with user-controlled paths that could allow directory traversal or information disclosure."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.DS-5", "PR.AC-4"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Resolve the full path and verify it resides within the expected base directory. Use an allowlist of permitted directories when possible."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: 'Directory\.(?:GetFiles|EnumerateFiles|GetDirectories|EnumerateDirectories|CreateDirectory|Delete)\s*\(\s*(?:\$"[^"]*\{[^}]+\}|"[^"]*"\s*\+\s*\w+)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Directory\.(?:GetFiles|EnumerateFiles|GetDirectories)\s*\(\s*(?:Request|request|input|userDir)\w*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+DirectoryInfo\s*\(\s*(?:\$"[^"]*\{[^}]+\}|"[^"]*"\s*\+\s*\w+)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'Path\.GetFullPath.*StartsWith'
+      - 'Contains\s*\(\s*["\''"]\.\.[''\''"]'
+      - '//\s*nosec'

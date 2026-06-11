@@ -1,0 +1,55 @@
+language: swift
+category: INSECURE_STORAGE
+rules:
+  - id: SW-STORE-001
+    name: "Sensitive data in UserDefaults"
+    description: "Storing sensitive data (passwords, tokens) in UserDefaults which is not encrypted."
+    severity: HIGH
+    cwe: "CWE-312"
+    cvss_score: 5.5
+    cvss_vector: "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1552.001"
+    nist_csf:
+      - "PR.DS-01"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Keychain Services for sensitive data storage instead of UserDefaults."
+    references:
+      - "https://cwe.mitre.org/data/definitions/312.html"
+    patterns:
+      - type: regex
+        pattern: "UserDefaults.*set\\s*\\([^)]*(?:password|token|secret|key|credential|auth)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "UserDefaults.*(?:forKey|setValue).*(?:password|token|secret|apiKey)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "Keychain"
+
+  - id: SW-STORE-002
+    name: "Sensitive data written to file without encryption"
+    description: "Writing sensitive data to file without proper data protection attributes."
+    severity: MEDIUM
+    cwe: "CWE-312"
+    cvss_score: 5.5
+    cvss_vector: "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1552.001"
+    nist_csf:
+      - "PR.DS-01"
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Use .completeFileProtection data protection option for sensitive files."
+    references:
+      - "https://cwe.mitre.org/data/definitions/312.html"
+    patterns:
+      - type: regex
+        pattern: "\\.write\\s*\\(\\s*to(?:File)?:\\s*[^,)]+(?:password|token|secret|credential)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "FileManager.*createFile.*(?:password|token|secret)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "protectionKey"
+      - "\\.completeFileProtection"
+      - "^\\s*//"

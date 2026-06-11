@@ -1,0 +1,71 @@
+language: java
+category: PATH_TRAVERSAL
+rules:
+  - id: JAVA-PATH-001
+    name: "File constructor with user input"
+    description: "java.io.File constructed from user-controlled path without canonicalization or containment check."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use getCanonicalPath() and verify it starts with the expected base directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'new\s+File\s*\(\s*(?:request|req|param|input|user|filename|filePath|path)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'getCanonicalPath'
+      - 'normalize'
+      - '^\s*//'
+
+  - id: JAVA-PATH-002
+    name: "Paths.get with user input"
+    description: "java.nio.file.Paths.get() with user-controlled path component without validation."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Path.normalize().toRealPath() and verify the result starts with the base directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'Paths\.get\s*\(\s*(?:request|req|param|input|user|filename|filePath)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'normalize'
+      - 'toRealPath'
+      - 'startsWith'
+      - '^\s*//'
+
+  - id: JAVA-PATH-003
+    name: "FileInputStream with user-controlled path"
+    description: "FileInputStream opened with user-controlled path enabling read access to arbitrary files."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate the file path against a base directory before opening."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'new\s+FileInputStream\s*\(\s*(?:request|req|param|input|user|filename|filePath)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'getCanonicalPath'
+      - '^\s*//'

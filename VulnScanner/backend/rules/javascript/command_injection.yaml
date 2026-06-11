@@ -1,0 +1,95 @@
+language: javascript
+category: COMMAND_INJECTION
+rules:
+  - id: JS-CMDI-001
+    name: "child_process exec with user input"
+    description: "child_process.exec() passes commands through the shell. User-controlled input enables arbitrary command execution."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use execFile() or spawn() with an array of arguments instead of exec(). Never pass user input to shell commands."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: '(?:child_process\.)?exec\s*\(\s*(?:`[^`]*\$\{|["\x27].*\+\s*(?:req\.|request\.|user|input|param|body|query))'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:child_process\.)?exec\s*\(\s*(?:req\.|request\.|user|input|param|body|query)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-CMDI-002
+    name: "execSync with user input"
+    description: "child_process.execSync() executes commands synchronously through the shell with user input."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use execFileSync() with argument arrays instead."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'execSync\s*\(\s*(?:`[^`]*\$\{|["\x27].*\+\s*(?:req\.|request\.|user|input|param|body|query))'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'execSync\s*\(\s*(?:req\.|request\.|user|input|param|body|query)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-CMDI-003
+    name: "spawn with user-controlled command"
+    description: "child_process.spawn() with user-controlled command name or shell option enables command injection."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate command names against a strict allowlist. Never use shell: true with user input."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'spawn\s*\(\s*(?:req\.|request\.|user|input|param|body|query)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'spawn\s*\([^)]*shell\s*:\s*true'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-CMDI-004
+    name: "vm.runInNewContext with user input"
+    description: "Node.js VM module used with user-controlled code. The VM module does not provide a security sandbox."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Do not use the VM module for sandboxing untrusted code. Use vm2 or isolated-vm for proper sandboxing."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'vm\.(runInNewContext|runInThisContext|runInContext|compileFunction)\s*\(\s*(?:req\.|request\.|user|input|param|body|query)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

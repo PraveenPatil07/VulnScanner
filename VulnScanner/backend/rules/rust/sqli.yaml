@@ -1,0 +1,53 @@
+language: rust
+category: SQL_INJECTION
+rules:
+  - id: RS-SQLI-001
+    name: "Format string in SQL query"
+    description: "SQL query built with format!() macro, enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries with sqlx::query!() or diesel query builder."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?:query|execute)\\s*\\(\\s*&?format!\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:query|execute)\\s*\\(\\s*&?\\s*format!\\s*\\(\\s*\"[^\"]*(?:SELECT|INSERT|UPDATE|DELETE)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: RS-SQLI-002
+    name: "String concatenation in SQL"
+    description: "SQL query built with string concatenation or push_str with user input."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use sqlx bind parameters ($1, $2) or diesel/sea-orm query builders."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "\"(?:SELECT|INSERT|UPDATE|DELETE)[^\"]*\"\\.to_(?:string|owned)\\(\\)\\s*\\+"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:query|sql).*push_str\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

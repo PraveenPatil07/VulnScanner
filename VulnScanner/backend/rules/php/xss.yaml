@@ -1,0 +1,77 @@
+language: php
+category: XSS
+rules:
+  - id: PHP-XSS-001
+    name: "Echo superglobal without encoding"
+    description: "PHP echo or print of superglobal variable without htmlspecialchars() encoding, enabling reflected XSS."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use htmlspecialchars($input, ENT_QUOTES, 'UTF-8') before outputting user input."
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: '(?:echo|print)\s+\$_(GET|POST|REQUEST|COOKIE|SERVER)\s*\['
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:echo|print)\s+["\x27][^"\x27]*\$_(GET|POST|REQUEST|COOKIE)\['
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'htmlspecialchars'
+      - 'htmlentities'
+      - 'strip_tags'
+      - '^\s*//'
+
+  - id: PHP-XSS-002
+    name: "Short echo tag with unsanitized input"
+    description: "PHP short echo tag (<?=) outputting user input without encoding."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use <?= htmlspecialchars($var, ENT_QUOTES, 'UTF-8') ?>"
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: '<\?=\s*\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '<\?=\s*\$(?!this)\w+\s*(?:;|\?>)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'htmlspecialchars'
+      - 'htmlentities'
+      - '^\s*//'
+
+  - id: PHP-XSS-003
+    name: "Printf/sprintf with user input in HTML"
+    description: "printf/sprintf used to inject user input into HTML output without encoding."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Encode the user input before passing to printf/sprintf."
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: '(?:printf|sprintf)\s*\(\s*["\x27]<[^>]*%s[^"\x27]*["\x27]\s*,\s*\$_(GET|POST|REQUEST)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'htmlspecialchars'
+      - '^\s*//'

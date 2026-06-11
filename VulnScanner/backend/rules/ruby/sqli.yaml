@@ -1,0 +1,72 @@
+language: ruby
+category: SQL_INJECTION
+rules:
+  - id: RB-SQLI-001
+    name: "String interpolation in SQL query"
+    description: "SQL query built with Ruby string interpolation #{}, enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries: User.where('id = ?', params[:id]) or ActiveRecord's where hash syntax."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '\.(?:where|find_by_sql|execute|select|joins|having|order)\s*\(\s*"[^"]*#\{'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.(?:where|find_by_sql|execute)\s*\(\s*''[^'']*#\{'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+
+  - id: RB-SQLI-002
+    name: "ActiveRecord raw SQL with concatenation"
+    description: "Raw SQL methods used with string concatenation."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use ActiveRecord's parameterized queries or sanitize_sql methods."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?:connection\.execute|ActiveRecord::Base\.connection\.execute)\s*\(\s*"[^"]*"\s*\+\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'sanitize'
+      - '^\s*#'
+
+  - id: RB-SQLI-003
+    name: "Sequel raw with interpolation"
+    description: "Sequel ORM used with string interpolation in queries."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use Sequel's placeholder syntax: DB['SELECT * FROM users WHERE id = ?', id]"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: 'DB\[?\s*"[^"]*#\{.*\}'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Sequel\.connect.*\[\s*".*#\{'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'

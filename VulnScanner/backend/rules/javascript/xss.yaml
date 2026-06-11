@@ -1,0 +1,145 @@
+language: javascript
+category: XSS
+rules:
+  - id: JS-XSS-001
+    name: "innerHTML assignment with user input"
+    description: "Direct assignment to innerHTML with user-controlled data enables XSS attacks."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use textContent instead of innerHTML for text. Use DOM APIs (createElement, appendChild) for dynamic HTML. Sanitize with DOMPurify if HTML is required."
+    references:
+      - "https://owasp.org/www-community/attacks/xss/"
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: '\.innerHTML\s*=\s*(?![\s"\x27][\s"\x27]*[;])'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.outerHTML\s*=\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'DOMPurify'
+      - 'sanitize'
+      - '\.innerHTML\s*=\s*["\x27]["\x27]\s*;'
+      - '^\s*//'
+
+  - id: JS-XSS-002
+    name: "document.write with user input"
+    description: "document.write() outputs content directly into the page without encoding, enabling XSS."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Replace document.write() with DOM manipulation methods. Use textContent for text insertion."
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: 'document\.write(ln)?\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'document\.write\s*\(\s*["\x27][^"\x27]*["\x27]\s*\)'
+
+  - id: JS-XSS-003
+    name: "jQuery .html() with user input"
+    description: "jQuery .html() method inserts HTML without encoding, enabling XSS when used with user input."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use .text() instead of .html() for text content. Sanitize input with DOMPurify before using .html()."
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: '\$\([^)]+\)\.html\s*\(\s*(?![\s"\x27]*\))'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'DOMPurify'
+      - 'sanitize'
+      - '\.html\s*\(\s*["\x27]'
+      - '^\s*//'
+
+  - id: JS-XSS-004
+    name: "React dangerouslySetInnerHTML"
+    description: "React's dangerouslySetInnerHTML used with user-controlled data bypasses React's XSS protection."
+    severity: HIGH
+    cwe: "CWE-79"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Avoid dangerouslySetInnerHTML. If required, sanitize with DOMPurify: dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(userInput)}}"
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: 'dangerouslySetInnerHTML\s*=\s*\{\s*\{\s*__html\s*:'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'DOMPurify'
+      - 'sanitize'
+      - '^\s*//'
+
+  - id: JS-XSS-005
+    name: "eval() with user input"
+    description: "eval() executes arbitrary JavaScript code. User-controlled input in eval() enables XSS and code injection."
+    severity: CRITICAL
+    cwe: "CWE-79"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Never use eval(). Use JSON.parse() for JSON data. Use Function constructors with caution, or restructure code to avoid dynamic evaluation."
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: '\beval\s*\(\s*(?![\s"\x27][\s"\x27]*\))'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'JSON\.parse'
+
+  - id: JS-XSS-006
+    name: "new Function() constructor with user input"
+    description: "Function constructor creates functions from strings, equivalent to eval() for code injection purposes."
+    severity: CRITICAL
+    cwe: "CWE-79"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Avoid new Function() with dynamic strings. Use structured approaches instead of code generation."
+    references:
+      - "https://cwe.mitre.org/data/definitions/79.html"
+    patterns:
+      - type: regex
+        pattern: 'new\s+Function\s*\([^)]*(?:req\.|request\.|user|input|param|body|query)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+Function\s*\(\s*[^"\x27`\)]+\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

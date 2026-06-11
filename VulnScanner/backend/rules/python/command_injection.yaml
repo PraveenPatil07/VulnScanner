@@ -1,0 +1,122 @@
+language: python
+category: COMMAND_INJECTION
+rules:
+  - id: PY-CMDI-001
+    name: "subprocess with shell=True and user input"
+    description: "subprocess function called with shell=True and user-controlled input, allowing arbitrary command execution."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use subprocess with shell=False and pass arguments as a list."
+    references:
+      - "https://owasp.org/www-community/attacks/Command_Injection"
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "subprocess\\.(call|run|Popen|check_output|check_call)\\s*\\([^)]*shell\\s*=\\s*True"
+      - type: regex
+        pattern: "subprocess\\.(call|run|Popen|check_output|check_call)\\s*\\(\\s*f[\"']"
+    false_positive_filters:
+      - "shell\\s*=\\s*False"
+      - "^\\s*#"
+
+  - id: PY-CMDI-002
+    name: "os.system() command execution"
+    description: "os.system() executes commands in a shell, making it vulnerable to injection if user input is included."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Replace os.system() with subprocess.run() using shell=False and a list of arguments."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "os\\.system\\s*\\("
+      - type: regex
+        pattern: "os\\.popen\\s*\\("
+    false_positive_filters:
+      - "^\\s*#"
+
+  - id: PY-CMDI-003
+    name: "eval() with user input"
+    description: "eval() executes arbitrary Python code. If user input reaches eval(), it enables full code execution."
+    severity: CRITICAL
+    cwe: "CWE-95"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Replace eval() with ast.literal_eval() for safe parsing, or use a proper parser."
+    references:
+      - "https://docs.python.org/3/library/ast.html#ast.literal_eval"
+    patterns:
+      - type: regex
+        pattern: "eval\\s*\\(\\s*(request|input|sys\\.argv|os\\.environ)"
+      - type: regex
+        pattern: "eval\\s*\\(\\s*f[\"']"
+      - type: regex
+        pattern: "exec\\s*\\(\\s*(request|input|sys\\.argv)"
+    false_positive_filters:
+      - "ast\\.literal_eval"
+      - "^\\s*#"
+
+  - id: PY-CMDI-004
+    name: "os.exec* family usage"
+    description: "os.exec* functions replace the current process with a new one. User input in arguments enables command injection."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate and sanitize all input before passing to os.exec* functions."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "os\\.exec(l|le|lp|lpe|v|ve|vp|vpe)\\s*\\("
+    false_positive_filters:
+      - "^\\s*#"
+
+  - id: PY-CMDI-005
+    name: "commands/popen usage"
+    description: "Legacy command execution functions that are vulnerable to shell injection."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use subprocess.run() with shell=False instead of legacy command execution functions."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "commands\\.(getoutput|getstatusoutput)\\s*\\("
+      - type: regex
+        pattern: "os\\.popen[234]?\\s*\\("
+    false_positive_filters:
+      - "^\\s*#"

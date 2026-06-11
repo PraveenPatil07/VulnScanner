@@ -1,0 +1,77 @@
+language: typescript
+category: SQL_INJECTION
+rules:
+  - id: TS-SQLI-001
+    name: "Template literal in SQL query"
+    description: "SQL query constructed using template literals with embedded expressions, enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries or an ORM with proper escaping."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?:query|execute|raw)\\s*\\(\\s*`[^`]*\\$\\{"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:query|execute|raw)\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\+"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: TS-SQLI-002
+    name: "TypeORM raw query with interpolation"
+    description: "TypeORM raw query using string interpolation instead of parameters."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use TypeORM query builder with parameter binding: .where('user.id = :id', { id })."
+    references:
+      - "https://typeorm.io/select-query-builder"
+    patterns:
+      - type: regex
+        pattern: "\\.query\\s*\\(\\s*`[^`]*\\$\\{[^}]*\\}"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "createQueryBuilder\\([^)]*\\)[^;]*\\.where\\s*\\(\\s*`[^`]*\\$\\{"
+        flags: [MULTILINE]
+    false_positive_filters: []
+
+  - id: TS-SQLI-003
+    name: "Prisma raw query with interpolation"
+    description: "Prisma $queryRaw or $executeRaw with template literal interpolation."
+    severity: HIGH
+    cwe: "CWE-89"
+    cvss_score: 8.6
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Prisma.$queryRaw with tagged template (Prisma.sql) for safe parameterization."
+    references:
+      - "https://www.prisma.io/docs/concepts/components/prisma-client/raw-database-access"
+    patterns:
+      - type: regex
+        pattern: "\\$queryRawUnsafe\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\$executeRawUnsafe\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters: []

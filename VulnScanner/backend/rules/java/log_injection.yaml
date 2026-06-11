@@ -1,0 +1,72 @@
+language: java
+category: LOG_INJECTION
+rules:
+  - id: JAVA-LOG-001
+    name: "Log injection via user input"
+    description: "User input logged without sanitization. Attacker can inject fake log entries or CRLF sequences to forge log records."
+    severity: MEDIUM
+    cwe: "CWE-117"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1070"
+    nist_csf: ["PR.DS-05", "DE.AE-03"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Sanitize log input by removing newlines and control characters. Use structured logging (JSON format). Limit logged field lengths."
+    references:
+      - "https://owasp.org/www-community/attacks/Log_Injection"
+      - "https://cwe.mitre.org/data/definitions/117.html"
+    patterns:
+      - type: regex
+        pattern: '(?:logger|log|LOG)\.(info|warn|error|debug|trace)\s*\(\s*(?:[^)]*\+\s*(?:request|req|param|input|user))'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:logger|log|LOG)\.(info|warn|error|debug|trace)\s*\(\s*"[^"]*\{\}[^"]*"\s*,\s*(?:request|req)\.'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '\.replaceAll\s*\('
+      - 'sanitize'
+      - '^\s*//'
+
+  - id: JAVA-LOG-002
+    name: "CRLF injection in log output"
+    description: "Potential CRLF injection where user input containing newlines is passed to logging functions."
+    severity: MEDIUM
+    cwe: "CWE-117"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1070"
+    nist_csf: ["PR.DS-05", "DE.AE-03"]
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Replace \\r and \\n in user input before logging."
+    references:
+      - "https://cwe.mitre.org/data/definitions/117.html"
+    patterns:
+      - type: regex
+        pattern: 'System\.out\.print(ln)?\s*\(\s*(?:[^)]*\+\s*(?:request|req|param|input|user))'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '\.replace\s*\('
+      - '^\s*//'
+
+  - id: JAVA-LOG-003
+    name: "Log4j pattern with user data in message"
+    description: "User-controlled data passed directly into Log4j message pattern, potential for Log4Shell-style attacks."
+    severity: HIGH
+    cwe: "CWE-117"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-05", "DE.AE-03"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Update Log4j to 2.17.1+. Use parameterized logging. Never concatenate user input into log messages."
+    references:
+      - "https://cwe.mitre.org/data/definitions/117.html"
+    patterns:
+      - type: regex
+        pattern: '(?:logger|log)\.\w+\s*\(\s*[^)]*(?:request\.getHeader|request\.getParameter|request\.getQueryString)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

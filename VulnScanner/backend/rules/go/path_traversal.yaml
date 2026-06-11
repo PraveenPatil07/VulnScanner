@@ -1,0 +1,70 @@
+language: go
+category: PATH_TRAVERSAL
+rules:
+  - id: GO-PATH-001
+    name: "filepath.Join with user input without Clean"
+    description: "filepath.Join used with user input without subsequent path containment validation."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use filepath.Clean() and verify the result with strings.HasPrefix(cleanedPath, baseDir)."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'filepath\.Join\s*\([^)]*(?:r\.|req\.|request\.|param|input|user|filename)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'filepath\.Clean'
+      - 'strings\.HasPrefix'
+      - '^\s*//'
+
+  - id: GO-PATH-002
+    name: "os.Open with user-controlled path"
+    description: "os.Open or os.ReadFile with user-controlled path."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate file paths against a base directory before opening."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'os\.(Open|ReadFile|Create|OpenFile)\s*\(\s*(?:r\.|req\.|request\.|param|input|user|filename|filePath)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'filepath\.Clean'
+      - 'strings\.HasPrefix'
+      - '^\s*//'
+
+  - id: GO-PATH-003
+    name: "http.ServeFile with user path"
+    description: "http.ServeFile serving files based on user-controlled path."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use http.FileServer with http.Dir() that restricts the root, or validate paths."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'http\.ServeFile\s*\([^,]+,\s*[^,]+,\s*(?:r\.|req\.|filepath\.Join)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'filepath\.Clean'
+      - '^\s*//'

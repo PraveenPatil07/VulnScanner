@@ -1,0 +1,74 @@
+language: php
+category: COMMAND_INJECTION
+rules:
+  - id: PHP-CMDI-001
+    name: "exec/system/shell_exec with user input"
+    description: "PHP command execution function called with user-controlled input."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use escapeshellarg() and escapeshellcmd() for any shell arguments. Preferably avoid shell commands entirely."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: '(?:exec|system|shell_exec|passthru|popen|proc_open)\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:exec|system|shell_exec|passthru|popen|proc_open)\s*\(\s*["\x27][^"\x27]*["\x27]\s*\.\s*\$'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'escapeshellarg'
+      - 'escapeshellcmd'
+      - '^\s*//'
+
+  - id: PHP-CMDI-002
+    name: "Backtick operator with user input"
+    description: "PHP backtick operator executes shell commands with user input."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Replace backtick operator with escapeshellarg()-protected exec() calls."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: '`[^`]*\$_(GET|POST|REQUEST|COOKIE)[^`]*`'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '`[^`]*\$\w+[^`]*`'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'escapeshellarg'
+      - '^\s*//'
+
+  - id: PHP-CMDI-003
+    name: "preg_replace with /e modifier"
+    description: "preg_replace with the /e modifier (deprecated) evaluates replacement as PHP code."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use preg_replace_callback() instead of the /e modifier."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'preg_replace\s*\(\s*["\x27]/[^/]*/[a-z]*e[a-z]*["\x27]'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

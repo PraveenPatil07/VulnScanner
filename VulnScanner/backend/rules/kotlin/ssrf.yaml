@@ -1,0 +1,55 @@
+language: kotlin
+category: SSRF
+rules:
+  - id: KT-SSRF-001
+    name: "Unvalidated URL in HTTP client"
+    description: "User-controlled URL passed to HTTP client without validation, enabling SSRF."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1090"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate and allowlist URLs. Block internal IP ranges and metadata endpoints."
+    references:
+      - "https://owasp.org/www-community/attacks/Server_Side_Request_Forgery"
+    patterns:
+      - type: regex
+        pattern: "URL\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:OkHttpClient|HttpClient|Fuel|Ktor).*\\.(get|post|put|request)\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "HttpURLConnection.*openConnection\\s*\\(\\s*\\)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: KT-SSRF-002
+    name: "WebView loadUrl with user input"
+    description: "Android WebView loading URL from user input, potentially accessing internal resources."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1090"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate URLs against an allowlist before loading in WebView."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: "\\.loadUrl\\s*\\(\\s*(?:intent|getIntent|extras)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\.loadUrl\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

@@ -1,0 +1,62 @@
+language: cpp
+category: INSECURE_CRYPTO
+rules:
+  - id: CPP-CRYPTO-001
+    name: "Weak hash algorithm"
+    description: "Use of weak or deprecated hash algorithms (MD5, SHA1) for security operations."
+    severity: HIGH
+    cwe: "CWE-327"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1600"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use SHA-256 or SHA-3 for hashing. Use bcrypt/argon2 for password hashing."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: "\\bMD5\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bSHA1\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "EVP_md5\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "EVP_sha1\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"
+      - "checksum|fingerprint|etag"
+
+  - id: CPP-CRYPTO-002
+    name: "Insecure random number generation"
+    description: "Using rand()/srand() for security-sensitive operations instead of cryptographic RNG."
+    severity: MEDIUM
+    cwe: "CWE-330"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1600"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use std::random_device or OS-specific CSPRNG (e.g., /dev/urandom, BCryptGenRandom)."
+    references:
+      - "https://cwe.mitre.org/data/definitions/330.html"
+    patterns:
+      - type: regex
+        pattern: "\\brand\\s*\\(\\s*\\)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bsrand\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "random_device"
+      - "^\\s*//"
+      - "test|mock"

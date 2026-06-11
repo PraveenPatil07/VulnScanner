@@ -1,0 +1,56 @@
+language: rust
+category: PATH_TRAVERSAL
+rules:
+  - id: RS-PATH-001
+    name: "Path traversal in file operations"
+    description: "User input used in file path without canonicalization, allowing directory traversal."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Path::canonicalize() and verify the path starts with the expected base directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: "(?:File::open|File::create|read_to_string|write)\\s*\\(\\s*&?format!\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "Path::new\\s*\\(\\s*&?(?:req|input|param|query|body)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "PathBuf::from\\s*\\(\\s*&?(?:req|input|param|query|body)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "canonicalize"
+      - "starts_with"
+      - "^\\s*//"
+
+  - id: RS-PATH-002
+    name: "Path join with user input"
+    description: "Path::join with user-controlled input may traverse outside intended directory."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Canonicalize the joined path and verify it is still under the base directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: "\\.join\\s*\\(\\s*&?(?:req|input|param|query|body|filename)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "canonicalize"
+      - "starts_with"
+      - "^\\s*//"

@@ -1,0 +1,93 @@
+language: csharp
+category: SQL_INJECTION
+rules:
+  - id: "CS-SQLI-001"
+    name: "SqlCommand with string concatenation"
+    description: "Detects SQL injection via string concatenation in SqlCommand constructors or CommandText assignments. User input directly concatenated into SQL strings allows attackers to manipulate queries."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-5", "DE.CM-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries with SqlParameter. Replace string concatenation with @parameter placeholders and add parameters via cmd.Parameters.AddWithValue()."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+      - "https://learn.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcommand"
+    patterns:
+      - type: regex
+        pattern: 'new\s+SqlCommand\s*\(\s*(?:"|@"|\$"|@\$"|")\s*(?:SELECT|INSERT|UPDATE|DELETE|EXEC)[^"]*"\s*\+\s*\w+'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: '\.CommandText\s*=\s*(?:"|@"|\$"|")\s*(?:SELECT|INSERT|UPDATE|DELETE|EXEC)[^"]*"\s*\+\s*\w+'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: 'new\s+SqlCommand\s*\(\s*\$"[^"]*\{[^}]+\}[^"]*(?:SELECT|INSERT|UPDATE|DELETE|EXEC)'
+        flags: [MULTILINE, IGNORECASE]
+    false_positive_filters:
+      - 'SqlParameter'
+      - 'Parameters\.Add'
+      - 'Parameters\.AddWithValue'
+      - '//\s*nosec'
+
+  - id: "CS-SQLI-002"
+    name: "Entity Framework raw SQL with interpolation"
+    description: "Detects use of FromSqlRaw or ExecuteSqlRaw with string interpolation or concatenation. These methods do not parameterize interpolated strings, unlike their 'Interpolated' counterparts."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-5", "DE.CM-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use FromSqlInterpolated() or ExecuteSqlInterpolated() which automatically parameterize interpolated values. Alternatively, pass parameters explicitly to FromSqlRaw()."
+    references:
+      - "https://learn.microsoft.com/en-us/ef/core/querying/raw-sql"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: '\.FromSqlRaw\s*\(\s*\$"[^"]*\{[^}]+\}'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.ExecuteSqlRaw\s*\(\s*\$"[^"]*\{[^}]+\}'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.(?:FromSqlRaw|ExecuteSqlRaw)\s*\(\s*[^"$@]*\+\s*\w+'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'FromSqlInterpolated'
+      - 'ExecuteSqlInterpolated'
+      - '//\s*nosec'
+
+  - id: "CS-SQLI-003"
+    name: "Dapper unsafe query construction"
+    description: "Detects Dapper ORM queries using string concatenation or interpolation instead of parameterized queries. Dapper supports anonymous object parameters that should be used instead."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-5", "DE.CM-4"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Dapper's built-in parameterization with anonymous objects: connection.Query(\"SELECT * FROM users WHERE id = @Id\", new { Id = userId })."
+    references:
+      - "https://github.com/DapperLib/Dapper"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: '\.(?:Query|Execute|QueryFirst|QuerySingle)(?:Async)?\s*(?:<[^>]+>)?\s*\(\s*\$"[^"]*\{[^}]+\}'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.(?:Query|Execute|QueryFirst|QuerySingle)(?:Async)?\s*(?:<[^>]+>)?\s*\(\s*"[^"]*"\s*\+\s*\w+'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.(?:Query|Execute|QueryFirst|QuerySingle)(?:Async)?\s*(?:<[^>]+>)?\s*\(\s*string\.Format\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'new\s*\{'
+      - 'DynamicParameters'
+      - '//\s*nosec'

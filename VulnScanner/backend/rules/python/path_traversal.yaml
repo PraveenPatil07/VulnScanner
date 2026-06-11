@@ -1,0 +1,101 @@
+language: python
+category: PATH_TRAVERSAL
+rules:
+  - id: PY-PATH-001
+    name: "Direct file open with user input"
+    description: "File opened using user-controlled input without path validation, enabling path traversal to read arbitrary files."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate and canonicalize file paths using os.path.realpath(). Verify the resolved path is within the expected base directory."
+    references:
+      - "https://owasp.org/www-community/attacks/Path_Traversal"
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'open\s*\(\s*(request\.|req\.|user_|input|param|args|data|filename|filepath|file_path|path)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'open\s*\(\s*os\.path\.join\s*\([^,]+,\s*(request\.|req\.|user_|input|param|args)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'os\.path\.realpath'
+      - 'safe_join'
+      - '^\s*#'
+
+  - id: PY-PATH-002
+    name: "Flask send_file with user input"
+    description: "Flask's send_file() called with user-controlled path, allowing attackers to download arbitrary files from the server."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1005"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use flask.safe_join() to construct file paths, or validate that the resolved path is within the allowed directory."
+    references:
+      - "https://owasp.org/www-community/attacks/Path_Traversal"
+    patterns:
+      - type: regex
+        pattern: 'send_file\s*\(\s*(request\.|req\.|user_|input|param|args|filename|filepath|file_path)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'send_from_directory\s*\([^,]+,\s*(request\.|req\.|user_|input|param|args)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'safe_join'
+      - '^\s*#'
+
+  - id: PY-PATH-003
+    name: "Path traversal via os.path.join without validation"
+    description: "os.path.join() used with user input without subsequent path validation. An absolute path in user input overrides the base directory."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "After os.path.join(), use os.path.realpath() and verify the result starts with the expected base directory path."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'os\.path\.join\s*\([^)]*(?:request|user_input|filename|file_name|param|args\[|kwargs\[)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'os\.path\.realpath'
+      - 'os\.path\.abspath'
+      - '\.startswith\s*\('
+      - '^\s*#'
+
+  - id: PY-PATH-004
+    name: "pathlib.Path with user input without containment check"
+    description: "pathlib.Path constructed from user input without verifying the resolved path stays within the expected directory."
+    severity: MEDIUM
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Path.resolve() and verify the result is relative to the expected base path using .is_relative_to() (Python 3.9+) or str(resolved).startswith(str(base))."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'Path\s*\(\s*(request\.|req\.|user_|input|param|args|filename|filepath|file_path)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '\.resolve\s*\('
+      - 'is_relative_to'
+      - '^\s*#'

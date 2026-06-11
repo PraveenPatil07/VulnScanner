@@ -1,0 +1,94 @@
+language: java
+category: SQL_INJECTION
+rules:
+  - id: JAVA-SQLI-001
+    name: "Statement with string concatenation"
+    description: "SQL query built with string concatenation passed to Statement.executeQuery(), enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use PreparedStatement with parameter placeholders: PreparedStatement ps = conn.prepareStatement(\"SELECT * FROM users WHERE id = ?\"); ps.setString(1, userId);"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?:executeQuery|executeUpdate|execute)\s*\(\s*["\x27][^"\x27]*["\x27]\s*\+\s*'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:Statement|stmt)\s*\.\s*(?:executeQuery|executeUpdate|execute)\s*\(\s*[^")]*\+\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'PreparedStatement'
+      - '^\s*//'
+      - '^\s*\*'
+
+  - id: JAVA-SQLI-002
+    name: "PreparedStatement with concatenation"
+    description: "PreparedStatement created with string concatenation instead of parameterized query, negating its security benefits."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use ? placeholders in the SQL string and set parameters with setString(), setInt(), etc."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: 'prepareStatement\s*\(\s*["\x27][^"\x27]*["\x27]\s*\+\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+
+  - id: JAVA-SQLI-003
+    name: "JPA/Hibernate native query with concatenation"
+    description: "JPA EntityManager or Hibernate Session creating native queries with string concatenation."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use named parameters: em.createNativeQuery(\"SELECT * FROM users WHERE id = :id\").setParameter(\"id\", userId)"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: '(?:createNativeQuery|createSQLQuery|createQuery)\s*\(\s*["\x27][^"\x27]*["\x27]\s*\+\s*'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'setParameter'
+      - '^\s*//'
+
+  - id: JAVA-SQLI-004
+    name: "MyBatis ${} interpolation"
+    description: "MyBatis ${param} syntax directly interpolates values into SQL without escaping, unlike #{param} which uses prepared statements."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf: ["ID.RA-01", "PR.DS-10"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use #{param} instead of ${param} in MyBatis mapper XML. #{} uses prepared statements while ${} does string interpolation."
+    references:
+      - "https://mybatis.org/mybatis-3/sqlmap-xml.html"
+    patterns:
+      - type: regex
+        pattern: '(?:SELECT|INSERT|UPDATE|DELETE|WHERE|AND|OR)\s+.*\$\{[^}]+\}'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*<!--'
+      - '^\s*//'

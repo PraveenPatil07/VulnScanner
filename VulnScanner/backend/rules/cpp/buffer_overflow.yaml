@@ -1,0 +1,59 @@
+language: cpp
+category: BUFFER_OVERFLOW
+rules:
+  - id: CPP-BOF-001
+    name: "Unsafe C string functions in C++"
+    description: "Legacy C string functions (strcpy, strcat, sprintf) used in C++ code without bounds checking."
+    severity: CRITICAL
+    cwe: "CWE-120"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use std::string, std::string_view, or bounded functions (strncpy, snprintf). Prefer C++ standard library."
+    references:
+      - "https://cwe.mitre.org/data/definitions/120.html"
+    patterns:
+      - type: regex
+        pattern: "\\bstrcpy\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bstrcat\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bsprintf\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bgets\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"
+
+  - id: CPP-BOF-002
+    name: "Unchecked array index"
+    description: "Array access without bounds checking using operator[] on std containers."
+    severity: MEDIUM
+    cwe: "CWE-125"
+    cvss_score: 6.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:H"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Use .at() for bounds-checked access or verify index is within bounds before access."
+    references:
+      - "https://cwe.mitre.org/data/definitions/125.html"
+    patterns:
+      - type: regex
+        pattern: "\\[\\s*(?:user_|input_|req_|param_|argv)\\w*\\s*\\]"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "\\.at\\("
+      - "if.*<.*size"
+      - "^\\s*//"

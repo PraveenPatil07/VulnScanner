@@ -1,0 +1,86 @@
+language: c
+category: BUFFER_OVERFLOW
+rules:
+  - id: C-BOF-001
+    name: "Unsafe string copy functions"
+    description: "Use of strcpy, strcat, sprintf without bounds checking, enabling buffer overflow."
+    severity: CRITICAL
+    cwe: "CWE-120"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use bounded alternatives: strncpy, strncat, snprintf, or strlcpy/strlcat."
+    references:
+      - "https://cwe.mitre.org/data/definitions/120.html"
+    patterns:
+      - type: regex
+        pattern: "\\bstrcpy\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bstrcat\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bsprintf\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bgets\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"
+      - "#define"
+      - "#undef"
+      - "BANNED"
+
+  - id: C-BOF-002
+    name: "Unsafe memory operations"
+    description: "memcpy or memmove with unchecked size parameter, enabling heap overflow."
+    severity: HIGH
+    cwe: "CWE-122"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Always validate that the size parameter does not exceed the destination buffer size."
+    references:
+      - "https://cwe.mitre.org/data/definitions/122.html"
+    patterns:
+      - type: regex
+        pattern: "\\bmemcpy\\s*\\([^,]+,\\s*[^,]+,\\s*(?:strlen|sizeof\\s*\\*|\\*)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"
+
+  - id: C-BOF-003
+    name: "scanf without width specifier"
+    description: "scanf with %s without width limit enables buffer overflow from user input."
+    severity: HIGH
+    cwe: "CWE-120"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use width specifier in scanf format: scanf(\"%255s\", buf) or use fgets() instead."
+    references:
+      - "https://cwe.mitre.org/data/definitions/120.html"
+    patterns:
+      - type: regex
+        pattern: "scanf\\s*\\([^)]*\"%[^0-9]*s\""
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\bfscanf\\s*\\([^)]*\"%[^0-9]*s\""
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

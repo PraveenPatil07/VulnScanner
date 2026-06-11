@@ -1,0 +1,68 @@
+language: javascript
+category: OPEN_REDIRECT
+rules:
+  - id: JS-REDIR-001
+    name: "Express redirect with user input"
+    description: "Express res.redirect() with user-controlled URL enables open redirect attacks."
+    severity: MEDIUM
+    cwe: "CWE-601"
+    cvss_score: 4.7
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N"
+    mitre_attack: "T1566"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate redirect URLs against an allowlist. Use relative paths for internal redirects."
+    references:
+      - "https://cwe.mitre.org/data/definitions/601.html"
+    patterns:
+      - type: regex
+        pattern: 'res\.redirect\s*\(\s*(?:req\.|request\.|params\.|body\.|query\.|url|next|return)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'isValidUrl'
+      - 'allowedDomains'
+
+  - id: JS-REDIR-002
+    name: "window.location assignment with user input"
+    description: "Client-side redirect via window.location with user-controlled URL."
+    severity: MEDIUM
+    cwe: "CWE-601"
+    cvss_score: 4.7
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N"
+    mitre_attack: "T1566"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate redirect targets. Only allow relative paths or whitelisted domains."
+    references:
+      - "https://cwe.mitre.org/data/definitions/601.html"
+    patterns:
+      - type: regex
+        pattern: '(?:window\.location|location\.href|location\.assign|location\.replace)\s*(?:=|\()\s*(?![\s"\x27])'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'window\.location\s*=\s*["\x27]/'
+
+  - id: JS-REDIR-003
+    name: "Header Location set with user input"
+    description: "HTTP Location header set with user-controlled value for redirect."
+    severity: MEDIUM
+    cwe: "CWE-601"
+    cvss_score: 4.7
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N"
+    mitre_attack: "T1566"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate redirect URLs before setting Location header."
+    references:
+      - "https://cwe.mitre.org/data/definitions/601.html"
+    patterns:
+      - type: regex
+        pattern: '(?:setHeader|writeHead)\s*\([^)]*["\x27](?:L|l)ocation["\x27][^)]*(?:req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

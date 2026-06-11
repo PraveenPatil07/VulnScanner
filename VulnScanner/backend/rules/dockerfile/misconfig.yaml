@@ -1,0 +1,154 @@
+language: dockerfile
+category: MISCONFIG
+
+rules:
+  - id: DOCKER-MISCONF-001
+    name: Container Running as Root
+    description: "Dockerfile does not specify a non-root USER, container will run as root"
+    severity: HIGH
+    cwe: CWE-250
+    cvss_score: 7.0
+    cvss_vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1611"
+    nist_csf: ["PR.AC-4"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    owasp_top10: "A05:2021"
+    remediation: "Add a USER directive with a non-root user before the ENTRYPOINT/CMD"
+    references:
+      - "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user"
+    patterns:
+      - type: regex
+        pattern: "^USER\\s+root\\s*$"
+        flags: [MULTILINE]
+    false_positive_filters: []
+
+  - id: DOCKER-MISCONF-002
+    name: Use of Latest Tag
+    description: "FROM instruction uses 'latest' tag which is not reproducible"
+    severity: MEDIUM
+    cwe: CWE-829
+    cvss_score: 4.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1195.002"
+    nist_csf: ["PR.IP-2"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A08:2021"
+    remediation: "Pin base images to specific versions/digests for reproducibility"
+    references:
+      - "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#from"
+    patterns:
+      - type: regex
+        pattern: "^FROM\\s+\\S+:latest"
+        flags: [MULTILINE]
+    false_positive_filters: []
+
+  - id: DOCKER-MISCONF-003
+    name: Exposed Sensitive Port
+    description: "Dockerfile exposes commonly-attacked ports (22 SSH, 23 Telnet, 3389 RDP)"
+    severity: MEDIUM
+    cwe: CWE-200
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1021"
+    nist_csf: ["PR.AC-5"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A05:2021"
+    remediation: "Remove unnecessary port exposures. Use SSH alternatives like docker exec."
+    references:
+      - "https://docs.docker.com/engine/reference/builder/#expose"
+    patterns:
+      - type: regex
+        pattern: "^EXPOSE\\s+.*(22|23|3389)(/tcp|/udp)?\\s*$"
+        flags: [MULTILINE]
+    false_positive_filters: []
+
+  - id: DOCKER-MISCONF-004
+    name: ADD Instead of COPY
+    description: "Using ADD when COPY would suffice — ADD has auto-extraction and URL fetching side effects"
+    severity: LOW
+    cwe: CWE-829
+    cvss_score: 3.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1195"
+    nist_csf: ["PR.IP-2"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    owasp_top10: "A08:2021"
+    remediation: "Use COPY unless you specifically need ADD's tar auto-extraction or URL features"
+    references:
+      - "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#add-or-copy"
+    patterns:
+      - type: regex
+        pattern: "^ADD\\s+(?!.*\\.tar)(?!https?://)\\S+"
+        flags: [MULTILINE]
+    false_positive_filters: []
+
+  - id: DOCKER-MISCONF-005
+    name: Hardcoded Secret in ENV
+    description: "Dockerfile contains hardcoded secrets in ENV directives"
+    severity: CRITICAL
+    cwe: CWE-798
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1552.001"
+    nist_csf: ["PR.AC-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    owasp_top10: "A07:2021"
+    remediation: "Use Docker secrets, build-args, or runtime environment variables instead of hardcoding"
+    references:
+      - "https://docs.docker.com/engine/swarm/secrets/"
+    patterns:
+      - type: regex
+        pattern: "^ENV\\s+\\w*(PASSWORD|SECRET|API_KEY|TOKEN|PRIVATE_KEY)\\w*[=\\s]+\\S+"
+        flags: [MULTILINE, IGNORECASE]
+    false_positive_filters:
+      - "\\$\\{"
+      - "changeme"
+      - "placeholder"
+
+  - id: DOCKER-MISCONF-006
+    name: apt-get Without --no-install-recommends
+    description: "apt-get install without --no-install-recommends increases image size and attack surface"
+    severity: LOW
+    cwe: CWE-1104
+    cvss_score: 2.0
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1195"
+    nist_csf: ["PR.IP-2"]
+    confidence: MEDIUM
+    false_positive_risk: HIGH
+    owasp_top10: "A06:2021"
+    remediation: "Use apt-get install --no-install-recommends to minimize installed packages"
+    references:
+      - "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#apt-get"
+    patterns:
+      - type: regex
+        pattern: "apt-get\\s+install\\s+(?!.*--no-install-recommends)"
+        flags: [MULTILINE]
+    false_positive_filters: []
+
+  - id: DOCKER-MISCONF-007
+    name: HEALTHCHECK Not Defined
+    description: "Dockerfile lacks HEALTHCHECK instruction for container health monitoring"
+    severity: INFO
+    cwe: CWE-778
+    cvss_score: 0.0
+    cvss_vector: ""
+    mitre_attack: ""
+    nist_csf: ["DE.CM-7"]
+    confidence: LOW
+    false_positive_risk: HIGH
+    owasp_top10: "A09:2021"
+    remediation: "Add HEALTHCHECK instruction to enable container health monitoring"
+    references:
+      - "https://docs.docker.com/engine/reference/builder/#healthcheck"
+    patterns:
+      - type: regex
+        pattern: "^FROM\\s+\\S+"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "HEALTHCHECK"

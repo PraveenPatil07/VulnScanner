@@ -1,0 +1,28 @@
+language: c
+category: FORMAT_STRING
+rules:
+  - id: C-FMT-001
+    name: "Format string vulnerability"
+    description: "User-controlled string passed as format argument to printf-family functions."
+    severity: CRITICAL
+    cwe: "CWE-134"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1203"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Always use a format string literal: printf(\"%s\", user_input) instead of printf(user_input)."
+    references:
+      - "https://cwe.mitre.org/data/definitions/134.html"
+    patterns:
+      - type: regex
+        pattern: "\\b(?:printf|fprintf|sprintf|snprintf|vprintf|vfprintf)\\s*\\(\\s*[a-zA-Z_][a-zA-Z0-9_]*\\s*\\)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\\b(?:syslog|err|warn)\\s*\\([^,]*,\\s*[a-zA-Z_][a-zA-Z0-9_]*\\s*\\)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "^\\s*\\*"

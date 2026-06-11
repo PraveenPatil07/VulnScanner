@@ -1,0 +1,53 @@
+language: kotlin
+category: COMMAND_INJECTION
+rules:
+  - id: KT-CMDI-001
+    name: "Runtime.exec with user input"
+    description: "Runtime.getRuntime().exec() with user-controlled input enables command injection."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use ProcessBuilder with explicit command array. Validate and sanitize all inputs."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "Runtime\\.getRuntime\\(\\)\\.exec\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "ProcessBuilder\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "ProcessBuilder\\s*\\(\\s*listOf\\s*\\([^)]*\\$"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: KT-CMDI-002
+    name: "ProcessBuilder with shell command"
+    description: "ProcessBuilder invoked with shell (/bin/sh, cmd.exe) allowing command injection via arguments."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Avoid invoking shell interpreters. Pass commands as arrays to ProcessBuilder directly."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "ProcessBuilder\\s*\\([^)]*(?:/bin/sh|/bin/bash|cmd\\.exe|cmd\\s*/c)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

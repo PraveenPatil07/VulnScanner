@@ -1,0 +1,92 @@
+language: csharp
+category: COMMAND_INJECTION
+rules:
+  - id: "CS-CMDI-001"
+    name: "Process.Start with user-controlled arguments"
+    description: "Detects Process.Start calls where FileName or Arguments may include user-controlled input via string concatenation or interpolation. Attackers can inject additional commands or arguments."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-5", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Avoid passing user input to Process.Start. If necessary, use a strict allowlist for commands and validate/sanitize all arguments. Set UseShellExecute = false and avoid cmd.exe /c."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html"
+      - "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.start"
+    patterns:
+      - type: regex
+        pattern: 'Process\.Start\s*\(\s*(?:\$"|"[^"]*"\s*\+)\s*\w+'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'FileName\s*=\s*(?:\$"[^"]*\{[^}]+\}|"[^"]*"\s*\+\s*\w+)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Arguments\s*=\s*(?:\$"[^"]*\{[^}]+\}|"[^"]*"\s*\+\s*\w+)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'ProcessStartInfo.*UseShellExecute\s*=\s*false'
+      - 'Regex\.IsMatch'
+      - '//\s*nosec'
+
+  - id: "CS-CMDI-002"
+    name: "PowerShell execution with user input"
+    description: "Detects execution of PowerShell commands constructed with user input. Attackers can escape the intended command context and execute arbitrary PowerShell code."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059.001"
+    nist_csf: ["PR.DS-5", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Avoid constructing PowerShell commands from user input. Use PowerShell SDK with typed parameters or a strict allowlist approach. Never pass unsanitized input to -Command or -EncodedCommand."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html"
+      - "https://learn.microsoft.com/en-us/powershell/scripting/developer/hosting/adding-and-invoking-commands"
+    patterns:
+      - type: regex
+        pattern: 'FileName\s*=\s*["\''"](?:powershell|pwsh)(?:\.exe)?["\''"]'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: '(?:powershell|pwsh)(?:\.exe)?\s+(?:-[Cc]ommand|-[Ee]ncodedCommand)\s*["\''"]?\s*(?:\$"|"[^"]*"\s*\+)'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: 'PowerShell\.Create\(\)\.AddScript\s*\(\s*(?:\$"|"[^"]*"\s*\+)\s*\w+'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'AddParameter\s*\('
+      - 'EscapeSingleQuotedStringContent'
+      - '//\s*nosec'
+
+  - id: "CS-CMDI-003"
+    name: "cmd.exe execution with user input"
+    description: "Detects cmd.exe /c invocations with user-controlled arguments. Command shell metacharacters (& | ; etc.) in user input can lead to arbitrary command execution."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059.003"
+    nist_csf: ["PR.DS-5", "PR.IP-1"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Avoid using cmd.exe /c with user input. Execute programs directly via Process.Start with UseShellExecute=false. If shell features are required, strictly validate input against an allowlist."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html"
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: 'FileName\s*=\s*["\''"]cmd(?:\.exe)?["\''"]'
+        flags: [MULTILINE, IGNORECASE]
+      - type: regex
+        pattern: 'Arguments\s*=\s*["\''"]?\s*/[Cc]\s+(?:\$"|"[^"]*"\s*\+)\s*\w+'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'Process\.Start\s*\(\s*["\''"]cmd(?:\.exe)?["\''"],\s*["\''"]?\s*/[Cc]\s+(?:\$"|"[^"]*"\s*\+)'
+        flags: [MULTILINE, IGNORECASE]
+    false_positive_filters:
+      - 'UseShellExecute\s*=\s*false.*CreateNoWindow\s*=\s*true'
+      - 'Regex\.IsMatch.*\^[\w\-]+\$'
+      - '//\s*nosec'

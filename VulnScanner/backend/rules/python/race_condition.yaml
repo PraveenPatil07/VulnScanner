@@ -1,0 +1,72 @@
+language: python
+category: RACE_CONDITION
+rules:
+  - id: PY-RACE-001
+    name: "Time-of-check to time-of-use (TOCTOU) file operation"
+    description: "File existence checked with os.path.exists() followed by file operation. An attacker can replace the file between the check and the use."
+    severity: MEDIUM
+    cwe: "CWE-362"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    mitre_attack: "T1068"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: HIGH
+    remediation: "Use atomic file operations. Open files with exclusive creation flags (os.O_EXCL). Use tempfile.mkstemp() for secure temporary files. Handle FileExistsError instead of checking first."
+    references:
+      - "https://cwe.mitre.org/data/definitions/362.html"
+    patterns:
+      - type: regex
+        pattern: 'os\.path\.exists\s*\([^)]+\)\s*.*\n.*open\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'if\s+os\.path\.(exists|isfile)\s*\([^)]+\).*\n\s+.*open\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+      - 'with\s+lock'
+
+  - id: PY-RACE-002
+    name: "Shared mutable state without synchronization"
+    description: "Global or class-level mutable variable accessed from multiple threads or async contexts without locking."
+    severity: MEDIUM
+    cwe: "CWE-362"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    mitre_attack: "T1068"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Use threading.Lock() or asyncio.Lock() to protect shared mutable state. Consider using thread-safe data structures from queue module."
+    references:
+      - "https://cwe.mitre.org/data/definitions/362.html"
+    patterns:
+      - type: regex
+        pattern: '(?:global\s+\w+|cls\.\w+\s*=|self\.__class__\.\w+\s*=).*(?:thread|Thread|async|await)'
+        flags: [MULTILINE, DOTALL]
+    false_positive_filters:
+      - 'Lock\s*\('
+      - '^\s*#'
+
+  - id: PY-RACE-003
+    name: "Check-then-act pattern in database operations"
+    description: "Database query checks for existence followed by a separate insert/update, creating a window for race conditions."
+    severity: MEDIUM
+    cwe: "CWE-362"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    mitre_attack: "T1068"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Use database-level constraints (UNIQUE) and handle IntegrityError. Use INSERT ... ON CONFLICT or get_or_create() patterns."
+    references:
+      - "https://cwe.mitre.org/data/definitions/362.html"
+    patterns:
+      - type: regex
+        pattern: '\.filter\([^)]+\)\.(exists|count)\s*\(\s*\).*\n.*\.(create|save|insert)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'get_or_create'
+      - 'select_for_update'
+      - '^\s*#'

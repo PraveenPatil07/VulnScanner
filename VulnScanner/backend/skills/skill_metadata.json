@@ -1,0 +1,349 @@
+{
+  "SQL_INJECTION": {
+    "cwe": "CWE-89",
+    "cvss_score": 9.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1190", "T1059"],
+    "nist_csf": ["ID.RA-01", "PR.DS-10", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Use parameterized queries / prepared statements exclusively. Never concatenate user input into SQL strings. Apply input validation as defense-in-depth. Use an ORM with parameterized queries.",
+    "references": [
+      "https://owasp.org/www-community/attacks/SQL_Injection",
+      "https://cwe.mitre.org/data/definitions/89.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+    ]
+  },
+  "XSS": {
+    "cwe": "CWE-79",
+    "cvss_score": 6.1,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+    "mitre_attack": ["T1059.007"],
+    "nist_csf": ["PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Encode all output based on context (HTML, JavaScript, URL, CSS). Use Content-Security-Policy headers. Avoid innerHTML and document.write with user input. Use frameworks with automatic escaping.",
+    "references": [
+      "https://owasp.org/www-community/attacks/xss/",
+      "https://cwe.mitre.org/data/definitions/79.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ]
+  },
+  "COMMAND_INJECTION": {
+    "cwe": "CWE-78",
+    "cvss_score": 9.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1059", "T1203"],
+    "nist_csf": ["PR.DS-05", "PR.IP-01", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Never pass user input directly to system commands. Use parameterized APIs (e.g., subprocess with list args and shell=False). Apply strict input validation with allowlists. Use library functions instead of shell commands.",
+    "references": [
+      "https://owasp.org/www-community/attacks/Command_Injection",
+      "https://cwe.mitre.org/data/definitions/78.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html"
+    ]
+  },
+  "PATH_TRAVERSAL": {
+    "cwe": "CWE-22",
+    "cvss_score": 7.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+    "mitre_attack": ["T1083", "T1005"],
+    "nist_csf": ["PR.AC-04", "PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A01:2021 - Broken Access Control",
+    "remediation_summary": "Validate and canonicalize file paths. Use os.path.realpath() and verify the resolved path stays within the expected base directory. Use allowlists for permitted files/directories.",
+    "references": [
+      "https://owasp.org/www-community/attacks/Path_Traversal",
+      "https://cwe.mitre.org/data/definitions/22.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html"
+    ]
+  },
+  "SSRF": {
+    "cwe": "CWE-918",
+    "cvss_score": 9.1,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+    "mitre_attack": ["T1090", "T1071"],
+    "nist_csf": ["PR.AC-05", "PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A10:2021 - Server-Side Request Forgery",
+    "remediation_summary": "Validate and sanitize all user-supplied URLs. Use allowlists for permitted domains/IPs. Block requests to private/internal IP ranges (10.x, 172.16.x, 192.168.x, 127.x, ::1). Disable HTTP redirects or validate redirect targets.",
+    "references": [
+      "https://owasp.org/www-community/attacks/Server_Side_Request_Forgery",
+      "https://cwe.mitre.org/data/definitions/918.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
+    ]
+  },
+  "XXE": {
+    "cwe": "CWE-611",
+    "cvss_score": 9.1,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+    "mitre_attack": ["T1190", "T1005"],
+    "nist_csf": ["PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A05:2021 - Security Misconfiguration",
+    "remediation_summary": "Disable external entity processing in XML parsers. Use defusedxml library (Python), disable DOCTYPE declarations, set FEATURE_SECURE_PROCESSING. Prefer JSON over XML where possible.",
+    "references": [
+      "https://owasp.org/www-community/vulnerabilities/XML_External_Entity_(XXE)_Processing",
+      "https://cwe.mitre.org/data/definitions/611.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html"
+    ]
+  },
+  "INSECURE_DESERIALIZATION": {
+    "cwe": "CWE-502",
+    "cvss_score": 9.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1059", "T1203"],
+    "nist_csf": ["PR.DS-05", "PR.IP-01", "DE.CM-01"],
+    "owasp_top10": "A08:2021 - Software and Data Integrity Failures",
+    "remediation_summary": "Never deserialize untrusted data with pickle, marshal, or yaml.load(). Use safe alternatives (json, yaml.safe_load). Implement integrity checks (HMAC signatures) on serialized data. Use allowlist-based deserialization filters.",
+    "references": [
+      "https://owasp.org/www-community/vulnerabilities/Deserialization_of_untrusted_data",
+      "https://cwe.mitre.org/data/definitions/502.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
+    ]
+  },
+  "HARDCODED_SECRET": {
+    "cwe": "CWE-798",
+    "cvss_score": 7.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+    "mitre_attack": ["T1552.001"],
+    "nist_csf": ["PR.AC-01", "PR.DS-05", "PR.IP-06"],
+    "owasp_top10": "A07:2021 - Identification and Authentication Failures",
+    "remediation_summary": "Store secrets in environment variables or a secrets manager (AWS Secrets Manager, HashiCorp Vault). Never commit secrets to source control. Use .gitignore and pre-commit hooks to prevent accidental commits. Rotate any exposed credentials immediately.",
+    "references": [
+      "https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password",
+      "https://cwe.mitre.org/data/definitions/798.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+    ]
+  },
+  "CRYPTO_WEAK": {
+    "cwe": "CWE-327",
+    "cvss_score": 5.9,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+    "mitre_attack": ["T1557", "T1040"],
+    "nist_csf": ["PR.DS-02", "PR.DS-05"],
+    "owasp_top10": "A02:2021 - Cryptographic Failures",
+    "remediation_summary": "Use strong algorithms: AES-256-GCM for encryption, SHA-256+ for hashing, RSA-2048+ or ECDSA for signatures. Use secrets module for random generation. Enforce TLS 1.2+ with strong cipher suites. Deprecate MD5, SHA1, DES, RC4.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/327.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html"
+    ]
+  },
+  "SSTI": {
+    "cwe": "CWE-1336",
+    "cvss_score": 9.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1059", "T1190"],
+    "nist_csf": ["PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Never pass user input directly as template content. Use render_template() with template files, not render_template_string() with user data. Sandbox template environments. Apply strict input validation.",
+    "references": [
+      "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server-side_Template_Injection",
+      "https://cwe.mitre.org/data/definitions/1336.html"
+    ]
+  },
+  "OPEN_REDIRECT": {
+    "cwe": "CWE-601",
+    "cvss_score": 4.7,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N",
+    "mitre_attack": ["T1566.002"],
+    "nist_csf": ["PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A01:2021 - Broken Access Control",
+    "remediation_summary": "Validate redirect URLs against an allowlist of permitted domains. Use relative paths only for redirects. Never use user input directly in redirect targets without validation. Check URL scheme to prevent javascript: protocol.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/601.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    ]
+  },
+  "PROTOTYPE_POLLUTION": {
+    "cwe": "CWE-1321",
+    "cvss_score": 7.3,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+    "mitre_attack": ["T1059.007"],
+    "nist_csf": ["PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Freeze prototype objects with Object.freeze(Object.prototype). Validate object keys against __proto__, constructor, prototype. Use Map instead of plain objects for user-controlled keys. Use safe merge libraries that skip prototype properties.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/1321.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html"
+    ]
+  },
+  "RACE_CONDITION": {
+    "cwe": "CWE-362",
+    "cvss_score": 5.9,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+    "mitre_attack": ["T1068"],
+    "nist_csf": ["PR.DS-05", "PR.IP-01"],
+    "owasp_top10": "A04:2021 - Insecure Design",
+    "remediation_summary": "Use proper locking mechanisms (mutexes, semaphores, database locks). Implement atomic operations for critical sections. Use database transactions with appropriate isolation levels. Apply optimistic concurrency control with version fields.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/362.html",
+      "https://owasp.org/www-community/vulnerabilities/Race_condition"
+    ]
+  },
+  "LOG_INJECTION": {
+    "cwe": "CWE-117",
+    "cvss_score": 5.3,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+    "mitre_attack": ["T1070.001"],
+    "nist_csf": ["PR.DS-05", "DE.AE-03"],
+    "owasp_top10": "A09:2021 - Security Logging and Monitoring Failures",
+    "remediation_summary": "Sanitize all user input before logging. Encode or replace newline characters (\\n, \\r) in log messages. Use structured logging formats (JSON). Set maximum field lengths for logged values.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/117.html",
+      "https://owasp.org/www-community/attacks/Log_Injection"
+    ]
+  },
+  "FILE_INCLUSION": {
+    "cwe": "CWE-98",
+    "cvss_score": 9.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1059", "T1190"],
+    "nist_csf": ["PR.AC-04", "PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Never use user input in include/require paths. Use a mapping of allowed file identifiers to paths. Disable allow_url_include in PHP. Validate input against a strict allowlist. Use absolute paths in include statements.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/98.html",
+      "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11.1-Testing_for_Local_File_Inclusion"
+    ]
+  },
+  "MASS_ASSIGNMENT": {
+    "cwe": "CWE-915",
+    "cvss_score": 6.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+    "mitre_attack": ["T1565.001"],
+    "nist_csf": ["PR.AC-04", "PR.DS-05"],
+    "owasp_top10": "A04:2021 - Insecure Design",
+    "remediation_summary": "Use explicit allowlists of permitted fields for mass assignment. In frameworks, define fillable/guarded attributes. Never bind request parameters directly to database models without filtering. Use DTOs (Data Transfer Objects) to limit accepted fields.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/915.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html"
+    ]
+  },
+  "BROKEN_AUTH": {
+    "cwe": "CWE-287",
+    "cvss_score": 7.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+    "mitre_attack": ["T1078", "T1110"],
+    "nist_csf": ["PR.AC-01", "PR.AC-07", "DE.CM-01"],
+    "owasp_top10": "A07:2021 - Identification and Authentication Failures",
+    "remediation_summary": "Implement multi-factor authentication. Use strong password policies with bcrypt/argon2. Implement account lockout after failed attempts. Use secure session management with httpOnly, secure, SameSite cookies. Never expose session tokens in URLs.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/287.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+    ]
+  },
+  "INSECURE_UPLOAD": {
+    "cwe": "CWE-434",
+    "cvss_score": 8.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1105", "T1059"],
+    "nist_csf": ["PR.DS-05", "PR.IP-01", "DE.CM-01"],
+    "owasp_top10": "A04:2021 - Insecure Design",
+    "remediation_summary": "Validate file types using magic bytes, not just extensions. Store uploads outside the web root. Rename files with random names. Set maximum file size limits. Scan uploads for malware. Serve files via a separate domain.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/434.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"
+    ]
+  },
+  "CSRF": {
+    "cwe": "CWE-352",
+    "cvss_score": 6.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+    "mitre_attack": ["T1185"],
+    "nist_csf": ["PR.AC-04", "PR.DS-05"],
+    "owasp_top10": "A01:2021 - Broken Access Control",
+    "remediation_summary": "Implement anti-CSRF tokens (synchronizer token pattern). Use SameSite=Strict or SameSite=Lax cookie attribute. Verify Origin/Referer headers for state-changing requests. Use custom request headers for AJAX.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/352.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+    ]
+  },
+  "IDOR": {
+    "cwe": "CWE-639",
+    "cvss_score": 6.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+    "mitre_attack": ["T1078"],
+    "nist_csf": ["PR.AC-04", "PR.DS-05"],
+    "owasp_top10": "A01:2021 - Broken Access Control",
+    "remediation_summary": "Implement proper authorization checks for every data access. Use indirect references (UUIDs) instead of sequential IDs. Verify the requesting user has permission to access the specific resource. Apply row-level security in queries.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/639.html",
+      "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html"
+    ]
+  },
+  "REGEX_DOS": {
+    "cwe": "CWE-1333",
+    "cvss_score": 7.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+    "mitre_attack": ["T1499.004"],
+    "nist_csf": ["PR.DS-05", "PR.PT-05"],
+    "owasp_top10": "A06:2021 - Vulnerable and Outdated Components",
+    "remediation_summary": "Avoid nested quantifiers in regular expressions. Never construct regex from user input without sanitization. Set timeout limits on regex operations. Use RE2 or other linear-time regex engines. Test regex patterns with ReDoS detection tools.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/1333.html",
+      "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+    ]
+  },
+  "MISCONFIG": {
+    "cwe": "CWE-16",
+    "cvss_score": 5.3,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+    "mitre_attack": ["T1562.001"],
+    "nist_csf": ["PR.IP-01", "PR.DS-05", "DE.CM-06"],
+    "owasp_top10": "A05:2021 - Security Misconfiguration",
+    "remediation_summary": "Disable debug mode in production. Run containers as non-root. Disable unnecessary features and services. Apply principle of least privilege. Use security hardening guides for all components. Automate configuration validation.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/16.html",
+      "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/README"
+    ]
+  },
+  "DEPENDENCY_CONFUSION": {
+    "cwe": "CWE-427",
+    "cvss_score": 8.1,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1195.002"],
+    "nist_csf": ["PR.DS-06", "PR.IP-01", "DE.CM-07"],
+    "owasp_top10": "A08:2021 - Software and Data Integrity Failures",
+    "remediation_summary": "Use scoped packages or namespaces. Pin dependency versions exactly. Configure package manager to use private registry first. Implement integrity verification (checksums, signatures). Claim your internal package names on public registries.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/427.html",
+      "https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610"
+    ]
+  },
+  "FORMAT_STRING": {
+    "cwe": "CWE-134",
+    "cvss_score": 7.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+    "mitre_attack": ["T1203"],
+    "nist_csf": ["PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Never use user input as format strings. Pass user data as arguments to formatting functions, not as the format string itself. Use safe logging practices (logger.info('msg: %s', user_data) instead of logger.info(f'msg: {user_data}')).",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/134.html",
+      "https://owasp.org/www-community/attacks/Format_string_attack"
+    ]
+  },
+  "BUFFER_OVERFLOW": {
+    "cwe": "CWE-120",
+    "cvss_score": 9.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "mitre_attack": ["T1203", "T1068"],
+    "nist_csf": ["PR.DS-05", "PR.IP-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Use memory-safe languages where possible. Apply bounds checking on all buffer operations. Use safe string functions (strncpy, snprintf). Enable compiler protections (ASLR, stack canaries, DEP). Validate input lengths before processing.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/120.html",
+      "https://owasp.org/www-community/vulnerabilities/Buffer_Overflow"
+    ]
+  },
+  "LDAP_INJECTION": {
+    "cwe": "CWE-90",
+    "cvss_score": 7.5,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+    "mitre_attack": ["T1190"],
+    "nist_csf": ["PR.DS-05", "DE.CM-01"],
+    "owasp_top10": "A03:2021 - Injection",
+    "remediation_summary": "Escape special LDAP characters (*, (, ), \\, NUL) in user input. Use parameterized LDAP queries. Apply input validation with strict allowlists. Use frameworks that provide built-in LDAP escaping functions.",
+    "references": [
+      "https://cwe.mitre.org/data/definitions/90.html",
+      "https://owasp.org/www-community/attacks/LDAP_Injection",
+      "https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html"
+    ]
+  }
+}

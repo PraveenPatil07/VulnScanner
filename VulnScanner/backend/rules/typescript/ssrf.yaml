@@ -1,0 +1,55 @@
+language: typescript
+category: SSRF
+rules:
+  - id: TS-SSRF-001
+    name: "Unvalidated URL in HTTP request"
+    description: "User-controlled URL passed to HTTP client without validation, enabling SSRF attacks."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1090"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate and allowlist URLs. Block internal IP ranges (127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)."
+    references:
+      - "https://owasp.org/www-community/attacks/Server_Side_Request_Forgery"
+    patterns:
+      - type: regex
+        pattern: "(?:fetch|axios\\.get|axios\\.post|got|request)\\s*\\(\\s*(?:req\\.|params\\.|query\\.|body\\.)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:fetch|axios|got|request)\\s*\\(\\s*`[^`]*\\$\\{[^}]*(?:req|params|query|body|url)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "new\\s+URL\\s*\\(\\s*(?:req\\.|params\\.|query\\.)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: TS-SSRF-002
+    name: "Unvalidated redirect URL"
+    description: "User-controlled URL used in redirect without validation, enabling open redirect or SSRF."
+    severity: MEDIUM
+    cwe: "CWE-601"
+    cvss_score: 6.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    mitre_attack: "T1090"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate redirect URLs against an allowlist of trusted domains."
+    references:
+      - "https://cwe.mitre.org/data/definitions/601.html"
+    patterns:
+      - type: regex
+        pattern: "res\\.redirect\\s*\\(\\s*(?:req\\.|params\\.|query\\.)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "redirect\\s*\\(\\s*(?:req\\.query|req\\.body|req\\.params)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

@@ -1,0 +1,79 @@
+language: kotlin
+category: SQL_INJECTION
+rules:
+  - id: KT-SQLI-001
+    name: "String template in SQL query"
+    description: "SQL query constructed with Kotlin string templates, enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries or PreparedStatement with placeholders."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?:createQuery|createNativeQuery|rawQuery|execSQL)\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:execute|executeQuery|executeUpdate)\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "PreparedStatement"
+
+  - id: KT-SQLI-002
+    name: "String concatenation in SQL"
+    description: "SQL query built with string concatenation using user input."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries with ? placeholders."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?:executeQuery|execute|rawQuery|execSQL)\\s*\\(\\s*\"[^\"]*\"\\s*\\+"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "\"(?:SELECT|INSERT|UPDATE|DELETE)[^\"]*\"\\s*\\+"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: KT-SQLI-003
+    name: "Exposed framework raw SQL"
+    description: "Kotlin Exposed framework used with raw SQL containing string interpolation."
+    severity: HIGH
+    cwe: "CWE-89"
+    cvss_score: 8.6
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use Exposed DSL type-safe queries instead of raw SQL."
+    references:
+      - "https://github.com/JetBrains/Exposed"
+    patterns:
+      - type: regex
+        pattern: "exec\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "TransactionManager\\.current\\(\\)\\.exec\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters: []

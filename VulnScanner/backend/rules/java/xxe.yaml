@@ -1,0 +1,72 @@
+language: java
+category: XXE
+rules:
+  - id: JAVA-XXE-001
+    name: "DocumentBuilderFactory without secure features"
+    description: "XML parser created without disabling external entity processing, vulnerable to XXE attacks."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Set dbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true) or disable external entities."
+    references:
+      - "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html"
+    patterns:
+      - type: regex
+        pattern: 'DocumentBuilderFactory\.(newInstance|newDefaultInstance)\s*\(\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'disallow-doctype-decl'
+      - 'setFeature.*true'
+      - 'setExpandEntityReferences.*false'
+      - '^\s*//'
+
+  - id: JAVA-XXE-002
+    name: "SAXParserFactory without entity protection"
+    description: "SAX parser created without disabling external entities."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Set spf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true)"
+    references:
+      - "https://cwe.mitre.org/data/definitions/611.html"
+    patterns:
+      - type: regex
+        pattern: 'SAXParserFactory\.newInstance\s*\(\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'disallow-doctype-decl'
+      - 'setFeature'
+      - '^\s*//'
+
+  - id: JAVA-XXE-003
+    name: "XMLInputFactory without DTD disabled"
+    description: "StAX XMLInputFactory created without disabling DTD support."
+    severity: HIGH
+    cwe: "CWE-611"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.DS-05", "DE.CM-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Set xif.setProperty(XMLInputFactory.SUPPORT_DTD, false) and xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)"
+    references:
+      - "https://cwe.mitre.org/data/definitions/611.html"
+    patterns:
+      - type: regex
+        pattern: 'XMLInputFactory\.(newInstance|newFactory|newDefaultFactory)\s*\(\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'SUPPORT_DTD.*false'
+      - 'IS_SUPPORTING_EXTERNAL_ENTITIES.*false'
+      - '^\s*//'

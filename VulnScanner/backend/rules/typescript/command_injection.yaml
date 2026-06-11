@@ -1,0 +1,57 @@
+language: typescript
+category: COMMAND_INJECTION
+rules:
+  - id: TS-CMDI-001
+    name: "child_process exec with user input"
+    description: "child_process.exec() executes commands in a shell, vulnerable to injection if user input is included."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+      - "PR.IP-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use child_process.execFile() or spawn() with arguments array instead of exec()."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "(?:exec|execSync)\\s*\\(\\s*`[^`]*\\$\\{"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:exec|execSync)\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\+"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "child_process\\s*\\.\\s*exec\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: TS-CMDI-002
+    name: "eval() usage"
+    description: "eval() executes arbitrary code. If user input reaches eval(), it enables full code execution."
+    severity: CRITICAL
+    cwe: "CWE-95"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Avoid eval(). Use JSON.parse() for data, or a safe expression evaluator."
+    references:
+      - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval"
+    patterns:
+      - type: regex
+        pattern: "\\beval\\s*\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "new\\s+Function\\s*\\("
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "// eslint-disable"

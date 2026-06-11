@@ -1,0 +1,97 @@
+language: java
+category: INFORMATION_DISCLOSURE
+rules:
+  - id: JAVA-INFO-001
+    name: "Stack trace exposure via printStackTrace"
+    description: "Using e.printStackTrace() can expose internal application details (file paths, class names, library versions) to attackers."
+    severity: MEDIUM
+    cwe: "CWE-209"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["DE.CM-4"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use a logging framework (SLF4J/Log4j) with appropriate log levels instead of printStackTrace(). Never expose stack traces in HTTP responses."
+    references:
+      - "https://cwe.mitre.org/data/definitions/209.html"
+      - "https://owasp.org/www-community/Improper_Error_Handling"
+    patterns:
+      - type: regex
+        pattern: '\.printStackTrace\s*\(\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+
+  - id: JAVA-INFO-002
+    name: "Exception message exposed to client"
+    description: "Returning exception messages directly to clients can reveal internal details."
+    severity: LOW
+    cwe: "CWE-209"
+    cvss_score: 3.7
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["DE.CM-4"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Return generic error messages to clients. Log detailed exceptions server-side only."
+    references:
+      - "https://cwe.mitre.org/data/definitions/209.html"
+    patterns:
+      - type: regex
+        pattern: '(?:getMessage|toString)\s*\(\s*\)\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - '^\s*\*'
+      - 'log(?:ger)?\.(?:error|warn|debug|info)'
+
+  - id: JAVA-AUTH-001
+    name: "Spring endpoint without authentication"
+    description: "REST controller endpoint without security annotations may be accessible without authentication."
+    severity: MEDIUM
+    cwe: "CWE-306"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1190"
+    nist_csf: ["PR.AC-04"]
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Add @PreAuthorize, @Secured, or configure Spring Security to protect endpoints."
+    references:
+      - "https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html"
+    patterns:
+      - type: regex
+        pattern: '@(?:GetMapping|PostMapping|PutMapping|DeleteMapping|RequestMapping)\s*(?:\([^)]*\))?\s*\n\s*public\s+'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '@PreAuthorize'
+      - '@Secured'
+      - '@RolesAllowed'
+      - 'actuator'
+      - 'health'
+      - '/public/'
+
+  - id: JAVA-VALID-001
+    name: "Spring endpoint missing input validation"
+    description: "Request body parameter without @Valid annotation skips bean validation, allowing malformed input."
+    severity: LOW
+    cwe: "CWE-20"
+    cvss_score: 4.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Add @Valid annotation before @RequestBody parameters and define validation constraints on the model."
+    references:
+      - "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html"
+    patterns:
+      - type: regex
+        pattern: '@RequestBody\s+(?!@Valid)\w+'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '@Valid'
+      - '^\s*//'
+      - '^\s*\*'

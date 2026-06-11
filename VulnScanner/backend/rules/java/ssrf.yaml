@@ -1,0 +1,74 @@
+language: java
+category: SSRF
+rules:
+  - id: JAVA-SSRF-001
+    name: "URL connection with user input"
+    description: "Java URL/HttpURLConnection opened with user-controlled URL enabling SSRF."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate URLs against an allowlist. Block private IP ranges."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'new\s+URL\s*\(\s*(?:request|req|param|input|user|url|endpoint)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '\.openConnection\s*\(\s*\).*(?:request|req|param|input|user|url)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JAVA-SSRF-002
+    name: "HttpClient with user URL"
+    description: "Java HttpClient or Apache HttpClient used with user-controlled URL."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate target URLs before making requests. Implement URL allowlist."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'HttpRequest\.newBuilder\s*\(\s*\)\s*\.uri\s*\(\s*URI\.create\s*\(\s*(?:request|req|param|input|user|url)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+Http(?:Get|Post|Put|Delete)\s*\(\s*(?:request|req|param|input|user|url)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JAVA-SSRF-003
+    name: "RestTemplate with user URL"
+    description: "Spring RestTemplate or WebClient used with user-controlled URL."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate URLs against an allowlist before making requests."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'restTemplate\.\w+\s*\(\s*(?:request|req|param|input|user|url|endpoint)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'webClient\.\w+\s*\(\s*\)\s*\.uri\s*\(\s*(?:request|req|param|input|user|url)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

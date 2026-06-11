@@ -1,0 +1,50 @@
+language: typescript
+category: INSECURE_DESERIALIZATION
+rules:
+  - id: TS-DESER-001
+    name: "Unsafe JSON parse with type assertion"
+    description: "JSON.parse() with type assertion (as) bypasses TypeScript type checking, potentially processing malicious data."
+    severity: MEDIUM
+    cwe: "CWE-502"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Validate parsed JSON against a schema using zod, joi, or class-validator before type assertion."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: "JSON\\.parse\\s*\\([^)]+\\)\\s+as\\s+"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "\\.validate\\("
+      - "\\.parse\\("
+      - "zod|joi|yup"
+
+  - id: TS-DESER-002
+    name: "node-serialize/serialize-javascript deserialization"
+    description: "Using node-serialize or similar libraries to deserialize untrusted data enables remote code execution."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Never deserialize untrusted data. Use JSON.parse() with schema validation instead."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: "(?:unserialize|deserialize)\\s*\\(\\s*(?:req\\.|body\\.|params\\.)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "require\\s*\\(\\s*[\"']node-serialize[\"']\\s*\\)"
+        flags: [MULTILINE]
+    false_positive_filters: []

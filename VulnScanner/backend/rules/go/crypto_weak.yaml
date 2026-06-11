@@ -1,0 +1,77 @@
+language: go
+category: CRYPTO_WEAK
+rules:
+  - id: GO-CRYPTO-001
+    name: "MD5/SHA1 usage in Go"
+    description: "Weak hash algorithm (MD5 or SHA1) used for security-sensitive operations."
+    severity: MEDIUM
+    cwe: "CWE-327"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Use crypto/sha256 or crypto/sha512 instead."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'md5\.(New|Sum)\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'sha1\.(New|Sum)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '(?i)(checksum|fingerprint|etag)'
+      - '^\s*//'
+
+  - id: GO-CRYPTO-002
+    name: "Insecure random for security"
+    description: "math/rand used instead of crypto/rand for security-sensitive random generation."
+    severity: MEDIUM
+    cwe: "CWE-330"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use crypto/rand for security-sensitive random generation."
+    references:
+      - "https://cwe.mitre.org/data/definitions/330.html"
+    patterns:
+      - type: regex
+        pattern: 'math/rand'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'rand\.(Int|Intn|Read)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'crypto/rand'
+      - '^\s*//'
+
+  - id: GO-CRYPTO-003
+    name: "Insecure TLS configuration"
+    description: "TLS configuration with InsecureSkipVerify or minimum version below TLS 1.2."
+    severity: HIGH
+    cwe: "CWE-327"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Set MinVersion to tls.VersionTLS12. Never use InsecureSkipVerify in production."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'InsecureSkipVerify\s*:\s*true'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'MinVersion\s*:\s*tls\.VersionTLS1[01]?\b'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '(?i)(test|dev|debug)'
+      - '^\s*//'

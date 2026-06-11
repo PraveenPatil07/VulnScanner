@@ -1,0 +1,58 @@
+language: javascript
+category: WEAK_CRYPTO
+
+rules:
+  - id: JS-CRYPTO-001
+    name: "Math.random() used for security-sensitive value"
+    description: "Math.random() is not cryptographically secure. Using it for tokens, session IDs, or secrets allows prediction attacks."
+    severity: HIGH
+    cwe: "CWE-330"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1110"
+    nist_csf: ["PR.DS-1"]
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    owasp_top10: "A02:2021"
+    remediation: "Use crypto.randomBytes() (Node.js) or crypto.getRandomValues() (browser) for security-sensitive random values."
+    references:
+      - "https://cwe.mitre.org/data/definitions/330.html"
+      - "https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues"
+    patterns:
+      - type: regex
+        pattern: '(?i)(?:token|password|secret|key|salt|nonce|session|csrf|otp).*Math\.random\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?i)Math\.random\s*\(.*(?:token|password|secret|key|salt|nonce|session|csrf|otp)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+      - 'test'
+      - 'mock'
+
+  - id: JS-CRYPTO-002
+    name: "Weak hash algorithm (MD5/SHA1) in crypto"
+    description: "MD5 and SHA-1 are cryptographically broken. Using them for security operations enables collision attacks."
+    severity: MEDIUM
+    cwe: "CWE-328"
+    cvss_score: 5.3
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    mitre_attack: "T1110"
+    nist_csf: ["PR.DS-1"]
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    owasp_top10: "A02:2021"
+    remediation: "Use SHA-256 or SHA-3 for hashing. Use bcrypt or Argon2 for password hashing."
+    references:
+      - "https://cwe.mitre.org/data/definitions/328.html"
+    patterns:
+      - type: regex
+        pattern: "createHash\\s*\\(\\s*['\"]md5['\"]\\s*\\)"
+      - type: regex
+        pattern: "createHash\\s*\\(\\s*['\"]sha1['\"]\\s*\\)"
+    false_positive_filters:
+      - '^\s*//'
+      - 'etag'
+      - 'checksum'
+      - 'fingerprint'
+      - 'content-hash'

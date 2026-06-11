@@ -1,0 +1,73 @@
+language: ruby
+category: COMMAND_INJECTION
+rules:
+  - id: RB-CMDI-001
+    name: "System/exec/backtick with user input"
+    description: "Ruby command execution with user-controlled input."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use array form of system(): system('cmd', arg1, arg2) which avoids shell interpretation."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: '(?:system|exec|`)\s*(?:\(\s*)?["\x27][^"\x27]*#\{.*params'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:system|exec)\s*\(\s*"[^"]*#\{'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '`[^`]*#\{[^}]*(?:params|request|input)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'Shellwords\.escape'
+      - '^\s*#'
+
+  - id: RB-CMDI-002
+    name: "Open3/IO.popen with user input"
+    description: "Open3 or IO.popen with user-controlled command."
+    severity: CRITICAL
+    cwe: "CWE-78"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use array form: Open3.capture3('cmd', arg1, arg2)"
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: '(?:Open3\.\w+|IO\.popen)\s*\(\s*"[^"]*#\{'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'Shellwords'
+      - '^\s*#'
+
+  - id: RB-CMDI-003
+    name: "Kernel.send/public_send with user method"
+    description: "Dynamic method invocation with user-controlled method name."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate method names against an allowlist before calling send()."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: '\.(send|public_send)\s*\(\s*params\['
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'

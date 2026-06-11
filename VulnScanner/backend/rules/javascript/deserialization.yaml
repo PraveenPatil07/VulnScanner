@@ -1,0 +1,76 @@
+language: javascript
+category: INSECURE_DESERIALIZATION
+rules:
+  - id: JS-DESER-001
+    name: "node-serialize unserialize with user input"
+    description: "node-serialize's unserialize() can execute arbitrary code through specially crafted serialized objects."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Do not use node-serialize. Use JSON.parse/JSON.stringify for serialization."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: '(?:serialize|node-serialize).*unserialize\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'require\s*\(\s*["\x27]node-serialize["\x27]\s*\)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-DESER-002
+    name: "JSON.parse result passed to eval or Function"
+    description: "Parsed JSON object passed to eval() or Function constructor, enabling code execution from deserialized data."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Never pass deserialized data to eval() or Function(). Process JSON data through validated schemas."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'eval\s*\(\s*JSON\.parse\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'new\s+Function\s*\(\s*JSON\.parse\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-DESER-003
+    name: "YAML.load without safe schema"
+    description: "js-yaml load() without specifying a safe schema can execute arbitrary JavaScript."
+    severity: HIGH
+    cwe: "CWE-502"
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use yaml.load(data, { schema: yaml.SAFE_SCHEMA }) or yaml.safeLoad()."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'yaml\.load\s*\(\s*(?:req\.|request\.|body|input|data|user)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'YAML\.load\s*\(\s*[^{]*\)\s*(?!.*(?:schema|SAFE))'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'SAFE_SCHEMA'
+      - 'safeLoad'
+      - '^\s*//'

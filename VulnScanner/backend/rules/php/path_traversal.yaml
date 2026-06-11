@@ -1,0 +1,73 @@
+language: php
+category: PATH_TRAVERSAL
+rules:
+  - id: PHP-PATH-001
+    name: "File operations with user input"
+    description: "File functions (fopen, file_get_contents, readfile) called with user-controlled path."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use basename() to strip directory components. Validate with realpath() and check the result is within the allowed directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: '(?:fopen|file_get_contents|readfile|file|unlink|copy|rename)\s*\(\s*\$_(GET|POST|REQUEST)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:fopen|file_get_contents|readfile|file|unlink)\s*\(\s*["\x27][^"\x27]*["\x27]\s*\.\s*\$_(GET|POST|REQUEST)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'basename'
+      - 'realpath'
+      - '^\s*//'
+
+  - id: PHP-PATH-002
+    name: "Directory traversal in path construction"
+    description: "Path built from user input without .. filtering or realpath validation."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use realpath() and verify the resolved path starts with the expected base directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: '(?:fopen|include|require|file_get_contents)\s*\(\s*\$\w+\s*\.\s*["\x27]/["\x27]\s*\.\s*\$'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'realpath'
+      - 'basename'
+      - '^\s*//'
+
+  - id: PHP-PATH-003
+    name: "move_uploaded_file with user-controlled destination"
+    description: "Uploaded file moved to user-controlled destination path."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    mitre_attack: "T1105"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Generate a random filename for uploads. Never use the original filename directly."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: 'move_uploaded_file\s*\(\s*[^,]+,\s*[^)]*\$_(GET|POST|REQUEST|FILES)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'basename'
+      - '^\s*//'

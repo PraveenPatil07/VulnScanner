@@ -1,0 +1,73 @@
+language: php
+category: INSECURE_DESERIALIZATION
+rules:
+  - id: PHP-DESER-001
+    name: "unserialize with user input"
+    description: "PHP unserialize() with user-controlled data can trigger arbitrary object instantiation and code execution via magic methods."
+    severity: CRITICAL
+    cwe: "CWE-502"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use json_decode() instead of unserialize(). If unserialize is needed, use the allowed_classes option: unserialize($data, ['allowed_classes' => false])"
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'unserialize\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'unserialize\s*\(\s*\$(?!_)[a-zA-Z]'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'allowed_classes.*false'
+      - '^\s*//'
+
+  - id: PHP-DESER-002
+    name: "unserialize without allowed_classes restriction"
+    description: "unserialize() called without restricting allowed classes."
+    severity: HIGH
+    cwe: "CWE-502"
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Always pass allowed_classes option: unserialize($data, ['allowed_classes' => ['SafeClass']])"
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: 'unserialize\s*\(\s*[^)]+\)\s*(?!.*allowed_classes)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'allowed_classes'
+      - '^\s*//'
+
+  - id: PHP-DESER-003
+    name: "Phar deserialization"
+    description: "Phar file operations can trigger deserialization of embedded metadata, leading to code execution."
+    severity: HIGH
+    cwe: "CWE-502"
+    cvss_score: 8.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.DS-05", "PR.IP-01"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate file paths to prevent phar:// wrapper usage with user input."
+    references:
+      - "https://cwe.mitre.org/data/definitions/502.html"
+    patterns:
+      - type: regex
+        pattern: '(?:file_exists|is_dir|is_file|filesize|file_get_contents)\s*\(\s*["\x27]?phar://'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'phar://\s*\$'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

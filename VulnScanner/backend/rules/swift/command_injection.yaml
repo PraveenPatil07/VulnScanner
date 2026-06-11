@@ -1,0 +1,55 @@
+language: swift
+category: COMMAND_INJECTION
+rules:
+  - id: SW-CMDI-001
+    name: "Process/NSTask command execution"
+    description: "Process or NSTask executing shell commands with user-controlled arguments."
+    severity: HIGH
+    cwe: "CWE-78"
+    cvss_score: 8.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Validate and sanitize all inputs. Avoid launching shell interpreters with user data."
+    references:
+      - "https://cwe.mitre.org/data/definitions/78.html"
+    patterns:
+      - type: regex
+        pattern: "Process\\(\\).*launchPath.*=.*\"/bin/"
+        flags: [MULTILINE, DOTALL]
+      - type: regex
+        pattern: "Process\\(\\).*executableURL"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "NSTask\\(\\)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+
+  - id: SW-CMDI-002
+    name: "WebView JavaScript bridge"
+    description: "WKWebView evaluateJavaScript with user-controlled input enables code injection."
+    severity: HIGH
+    cwe: "CWE-94"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1059"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Sanitize all data before passing to evaluateJavaScript. Use WKScriptMessageHandler for safe communication."
+    references:
+      - "https://cwe.mitre.org/data/definitions/94.html"
+    patterns:
+      - type: regex
+        pattern: "evaluateJavaScript\\s*\\(\\s*\"[^\"]*\\\\\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "evaluateJavaScript\\s*\\([^)]*\\+"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

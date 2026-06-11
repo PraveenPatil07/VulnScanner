@@ -1,0 +1,54 @@
+language: swift
+category: SQL_INJECTION
+rules:
+  - id: SW-SQLI-001
+    name: "String interpolation in SQL query"
+    description: "SQL query constructed with Swift string interpolation, enabling SQL injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+      - "PR.DS-10"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries with sqlite3_bind_* functions or an ORM like GRDB."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "(?:sqlite3_exec|executeQuery|executeUpdate)\\s*\\([^,]*\"[^\"]*\\\\\\("
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:SELECT|INSERT|UPDATE|DELETE)[^\"]*\\\\\\([^)]*\\)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"
+      - "sqlite3_bind"
+
+  - id: SW-SQLI-002
+    name: "String concatenation in SQL"
+    description: "SQL query built with string concatenation, vulnerable to injection."
+    severity: CRITICAL
+    cwe: "CWE-89"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1190"
+    nist_csf:
+      - "ID.RA-01"
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use parameterized queries instead of string concatenation."
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+    patterns:
+      - type: regex
+        pattern: "\"(?:SELECT|INSERT|UPDATE|DELETE)[^\"]*\"\\s*\\+"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "(?:executeQuery|executeUpdate|execute)\\s*\\([^)]*\\+[^)]*\\)"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "^\\s*//"

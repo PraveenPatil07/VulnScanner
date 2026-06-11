@@ -1,0 +1,74 @@
+language: php
+category: FILE_INCLUSION
+rules:
+  - id: PHP-FI-001
+    name: "Dynamic include with user input"
+    description: "include/require with user-controlled path enables Local/Remote File Inclusion attacks."
+    severity: CRITICAL
+    cwe: "CWE-98"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use a whitelist mapping of allowed file identifiers to paths. Never use user input directly in include statements."
+    references:
+      - "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11.1-Testing_for_Local_File_Inclusion"
+    patterns:
+      - type: regex
+        pattern: '(?:include|require|include_once|require_once)\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:include|require|include_once|require_once)\s+\$_(GET|POST|REQUEST|COOKIE)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: PHP-FI-002
+    name: "Include with path concatenation"
+    description: "include/require with path built from user input via concatenation."
+    severity: CRITICAL
+    cwe: "CWE-98"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use a mapping array: $pages = ['home' => 'home.php', 'about' => 'about.php']; include $pages[$_GET['page']] ?? '404.php';"
+    references:
+      - "https://cwe.mitre.org/data/definitions/98.html"
+    patterns:
+      - type: regex
+        pattern: '(?:include|require|include_once|require_once)\s*\(\s*["\x27][^"\x27]*["\x27]\s*\.\s*\$_(GET|POST|REQUEST)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:include|require|include_once|require_once)\s*\(\s*["\x27][^"\x27]*["\x27]\s*\.\s*\$\w+'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'basename'
+      - '^\s*//'
+
+  - id: PHP-FI-003
+    name: "Dynamic include with variable"
+    description: "include/require using a variable that may contain user-controlled data."
+    severity: HIGH
+    cwe: "CWE-98"
+    cvss_score: 9.8
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    mitre_attack: "T1059"
+    nist_csf: ["PR.AC-04", "PR.DS-05"]
+    confidence: LOW
+    false_positive_risk: HIGH
+    remediation: "Only include files from a predefined allowlist."
+    references:
+      - "https://cwe.mitre.org/data/definitions/98.html"
+    patterns:
+      - type: regex
+        pattern: '(?:include|require|include_once|require_once)\s*\(\s*\$(?:file|page|path|template|view|module|controller|action)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'in_array'
+      - 'array_key_exists'
+      - '^\s*//'

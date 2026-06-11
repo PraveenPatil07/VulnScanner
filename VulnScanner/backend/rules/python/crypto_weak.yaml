@@ -1,0 +1,125 @@
+language: python
+category: CRYPTO_WEAK
+rules:
+  - id: PY-CRYPTO-001
+    name: "MD5 hash usage"
+    description: "MD5 is cryptographically broken and should not be used for security purposes. Collisions can be generated in seconds."
+    severity: MEDIUM
+    cwe: "CWE-327"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Replace MD5 with SHA-256 or SHA-3 for integrity checks. For password hashing, use bcrypt, argon2, or scrypt."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'hashlib\.md5\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'MD5\.new\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '(?i)(checksum|fingerprint|etag|content.?hash)'
+      - '^\s*#'
+
+  - id: PY-CRYPTO-002
+    name: "SHA1 hash usage"
+    description: "SHA-1 is deprecated for security use. Practical collision attacks have been demonstrated."
+    severity: MEDIUM
+    cwe: "CWE-327"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Replace SHA-1 with SHA-256 or SHA-3."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'hashlib\.sha1\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'SHA\.new\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '(?i)(git|fingerprint|legacy)'
+      - '^\s*#'
+
+  - id: PY-CRYPTO-003
+    name: "Weak cipher algorithm (DES/RC4)"
+    description: "DES and RC4 are broken cipher algorithms. DES has a 56-bit key (brute-forceable), and RC4 has known statistical biases."
+    severity: HIGH
+    cwe: "CWE-327"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use AES-256-GCM or ChaCha20-Poly1305 for symmetric encryption."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: '(?i)(DES|DES3|RC4|RC2|Blowfish)\.new\s*\('
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?i)algorithms\.(DES|TripleDES|RC4|Blowfish|IDEA|CAST5)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+
+  - id: PY-CRYPTO-004
+    name: "Insecure random for security operations"
+    description: "Python's random module uses a predictable PRNG (Mersenne Twister). Using it for security-sensitive operations (tokens, passwords, keys) is insecure."
+    severity: MEDIUM
+    cwe: "CWE-330"
+    cvss_score: 5.9
+    cvss_vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Use the secrets module for security-sensitive random values: secrets.token_hex(), secrets.token_urlsafe(), secrets.randbelow()."
+    references:
+      - "https://cwe.mitre.org/data/definitions/330.html"
+    patterns:
+      - type: regex
+        pattern: '(?i)random\.(random|randint|choice|randrange|sample)\s*\([^)]*\).*(?:token|password|secret|key|salt|nonce|iv)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?i)(?:token|password|secret|key|salt|nonce|iv).*random\.(random|randint|choice|randrange|sample)\s*\('
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'secrets\.'
+      - '^\s*#'
+
+  - id: PY-CRYPTO-005
+    name: "Outdated TLS/SSL protocol version"
+    description: "Using deprecated TLS versions (TLSv1, TLSv1.1) or SSLv2/SSLv3 which have known vulnerabilities."
+    severity: HIGH
+    cwe: "CWE-327"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1557"
+    nist_csf: ["PR.DS-02", "PR.DS-05"]
+    confidence: HIGH
+    false_positive_risk: LOW
+    remediation: "Use TLS 1.2 or higher. Set ssl.PROTOCOL_TLS_CLIENT or create context with minimum_version=ssl.TLSVersion.TLSv1_2."
+    references:
+      - "https://cwe.mitre.org/data/definitions/327.html"
+    patterns:
+      - type: regex
+        pattern: 'ssl\.PROTOCOL_(SSLv2|SSLv3|SSLv23|TLSv1)\b'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'ssl\.TLSVersion\.TLSv1\b'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'

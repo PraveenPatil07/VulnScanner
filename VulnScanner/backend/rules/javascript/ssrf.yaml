@@ -1,0 +1,68 @@
+language: javascript
+category: SSRF
+rules:
+  - id: JS-SSRF-001
+    name: "HTTP request with user-controlled URL"
+    description: "HTTP request made to user-controlled URL using fetch, axios, or http module, enabling SSRF attacks."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate URLs against an allowlist of permitted domains. Block private IP ranges."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: '(?:fetch|axios\.\w+|got|request|superagent)\s*\(\s*(?:req\.|request\.|params\.|body\.|query\.|url|endpoint|target)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: '(?:fetch|axios\.\w+|got)\s*\(\s*`[^`]*\$\{[^}]*(?:req|request|params|body|query|url|endpoint)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-SSRF-002
+    name: "Node.js http/https request with user URL"
+    description: "Node.js native http/https module used to make requests to user-controlled URLs."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Parse and validate URLs. Block requests to internal networks (10.x, 172.16.x, 192.168.x, 127.x)."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: '(?:http|https)\.(?:get|request)\s*\(\s*(?:req\.|request\.|params\.|body\.|query\.|url|endpoint)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'
+
+  - id: JS-SSRF-003
+    name: "URL redirect/proxy with user input"
+    description: "Server-side redirect or proxy forwarding user-controlled URL without validation."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate target URLs against allowlist before proxying."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: '(?:proxy|forward|pipe)\s*\(\s*(?:req\.|request\.|params\.|body\.|query\.)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*//'

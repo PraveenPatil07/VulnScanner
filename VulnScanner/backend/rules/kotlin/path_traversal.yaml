@@ -1,0 +1,32 @@
+language: kotlin
+category: PATH_TRAVERSAL
+rules:
+  - id: KT-PATH-001
+    name: "Path traversal in file operations"
+    description: "File path constructed with user input without canonicalization, allowing directory traversal."
+    severity: HIGH
+    cwe: "CWE-22"
+    cvss_score: 7.5
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    mitre_attack: "T1083"
+    nist_csf:
+      - "PR.DS-05"
+    confidence: HIGH
+    false_positive_risk: MEDIUM
+    remediation: "Canonicalize the path with File.canonicalPath and verify it starts with the intended base directory."
+    references:
+      - "https://cwe.mitre.org/data/definitions/22.html"
+    patterns:
+      - type: regex
+        pattern: "File\\s*\\(\\s*\"[^\"]*\\$"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "File\\s*\\([^)]*\\+[^)]*\\)"
+        flags: [MULTILINE]
+      - type: regex
+        pattern: "Paths?\\.get\\s*\\([^)]*\\$"
+        flags: [MULTILINE]
+    false_positive_filters:
+      - "canonicalPath"
+      - "normalize"
+      - "^\\s*//"

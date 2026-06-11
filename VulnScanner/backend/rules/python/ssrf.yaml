@@ -1,0 +1,76 @@
+language: python
+category: SSRF
+rules:
+  - id: PY-SSRF-001
+    name: "requests library with user-controlled URL"
+    description: "HTTP request made to a user-controlled URL using the requests library, enabling SSRF attacks against internal services."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate URLs against an allowlist of permitted domains. Block private IP ranges (10.x, 172.16.x, 192.168.x, 127.x). Use a URL parser to validate the scheme and host before making requests."
+    references:
+      - "https://owasp.org/www-community/attacks/Server_Side_Request_Forgery"
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'requests\.(get|post|put|delete|patch|head|options)\s*\(\s*(request\.|req\.|user_|input|url|param|args|data|endpoint|target|webhook)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'requests\.(get|post|put|delete|patch|head|options)\s*\(\s*f["\''"]'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - 'requests\.\w+\s*\(\s*["\''"]https?://[a-zA-Z0-9.-]+\.[a-z]{2,}'
+      - '^\s*#'
+
+  - id: PY-SSRF-002
+    name: "urllib with user-controlled URL"
+    description: "urllib.request.urlopen() called with user-controlled URL, enabling SSRF attacks."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate the URL against an allowlist before passing to urlopen(). Reject private/internal IP addresses."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: 'urllib\.(request\.)?urlopen\s*\(\s*(request\.|req\.|user_|input|url|param|args)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'urllib\.(request\.)?urlopen\s*\(\s*f["\''"]'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
+
+  - id: PY-SSRF-003
+    name: "httpx/aiohttp with user-controlled URL"
+    description: "Async HTTP client (httpx or aiohttp) used with user-controlled URL, enabling SSRF attacks."
+    severity: HIGH
+    cwe: "CWE-918"
+    cvss_score: 9.1
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    mitre_attack: "T1090"
+    nist_csf: ["PR.AC-05", "PR.DS-05"]
+    confidence: MEDIUM
+    false_positive_risk: MEDIUM
+    remediation: "Validate URLs against an allowlist. Block requests to internal networks."
+    references:
+      - "https://cwe.mitre.org/data/definitions/918.html"
+    patterns:
+      - type: regex
+        pattern: '(httpx|aiohttp)\.(get|post|put|delete|patch|request)\s*\(\s*(request\.|req\.|user_|input|url|param|args)'
+        flags: [MULTILINE]
+      - type: regex
+        pattern: 'await\s+session\.(get|post|put|delete|patch)\s*\(\s*(request\.|req\.|user_|input|url|param|args)'
+        flags: [MULTILINE]
+    false_positive_filters:
+      - '^\s*#'
